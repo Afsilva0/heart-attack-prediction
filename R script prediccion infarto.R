@@ -10,8 +10,10 @@ demographic <- demographic_base
 examination <- examination_base
 questionnaire <- questionnaire_base
 
-## Se instala dplyr
-install.packages("dplyr")
+## Se carga dplyr
+if (!requireNamespace("dplyr", quietly = TRUE)) {
+  install.packages("dplyr")
+}
 library(dplyr)
 
 ## Selelcionar y renombrar campos demographic
@@ -86,13 +88,17 @@ questionnaire <- questionnaire %>%
 
 data_merge_demographic_examination <- merge(demographic, examination, by = "SEQN")
 
-data_merge <- merge(data_merge_demographic_examination, questionnaire)
+data_merge <- merge(data_merge_demographic_examination, questionnaire, by = "SEQN")
+
+## Filtro poblacional: adultos (edad >= 20 años)
+data_merge <- data_merge %>%
+  filter(age >= 20)
 
 View(data_merge)
 
 ## Trasformar información
 table(data_merge$sex)
-map_age_type <- c("Male" = 1, "Female" = 2)
+map_sex_type <- c("Male" = 1, "Female" = 2)
 map_race_type <- c(
   "Mexican American" = 1,
   "Other Hispanic" = 2,
@@ -116,8 +122,41 @@ getKeyByValue <- function(data, map) {
   names(map)[match(data, map)]
 }
 
-data_merge$sex <- getKeyByValue(data_merge$sex, map_age_type)
+data_merge$sex <- getKeyByValue(data_merge$sex, map_sex_type)
 data_merge$ethnicity_race <- getKeyByValue(data_merge$ethnicity_race, map_race_type)
 data_merge$education_level <- getKeyByValue(data_merge$education_level, map_education_type)
+
+## Recodificar variables binarias de NHANES (1 = Sí -> 1, 2 = No -> 0; 7/9 -> NA)
+clean_nhanes_binary <- function(x) {
+  case_when(
+    x == 1 ~ 1,
+    x == 2 ~ 0,
+    TRUE   ~ NA_real_
+  )
+}
+
+data_merge <- data_merge %>%
+  mutate(
+    previous_myocardial_infarction    = clean_nhanes_binary(previous_myocardial_infarction),
+    coronary_heart_disease            = clean_nhanes_binary(coronary_heart_disease),
+    angina_pectoris                   = clean_nhanes_binary(angina_pectoris),
+    cumulative_smoking_100_tabacco    = clean_nhanes_binary(cumulative_smoking_100_tabacco),
+    weekly_vigorous_physical_activity = clean_nhanes_binary(weekly_vigorous_physical_activity),
+    sleep_disorder_insomnia           = clean_nhanes_binary(sleep_disorder_insomnia),
+    family_history_mi_under_50        = clean_nhanes_binary(family_history_mi_under_50)
+  )
+## Promedio de constantes clínicas (Presión arterial sistólica y diastólica)
+data_merge <- data_merge %>%
+  mutate(
+    systolic_bp = rowMeans(cbind(systolic_bp_reading_1, systolic_bp_reading_2), na.rm = TRUE),
+    diastolic_bp = rowMeans(cbind(diastolic_bp_reading_1, diastolic_bp_reading_2), na.rm = TRUE)
+  )
+
+## Depuración de sedentarismo (eliminar valores  > 1440 min) y escala en horas
+data_merge <- data_merge %>%
+  mutate(
+    daily_sedentary_minutes = if_else(daily_sedentary_minutes > 1440, NA_real_, as.numeric(daily_sedentary_minutes)),
+    daily_sedentary_hours   = daily_sedentary_minutes / 60
+  )
 
 names(data_merge)
