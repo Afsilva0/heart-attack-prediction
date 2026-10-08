@@ -117,6 +117,10 @@ map_education_type <- c(
   "Refused" = 7,
   "Don't know" = 9
 )
+map_yes_no <- c(
+  "Yes" = 1,
+  "No" = 2
+)
 
 getKeyByValue <- function(data, map) {
   names(map)[match(data, map)]
@@ -127,7 +131,7 @@ data_merge$ethnicity_race <- getKeyByValue(data_merge$ethnicity_race, map_race_t
 data_merge$education_level <- getKeyByValue(data_merge$education_level, map_education_type)
 
 ## Recodificar variables binarias de NHANES (1 = Sí -> 1, 2 = No -> 0; 7/9 -> NA)
-clean_nhanes_binary <- function(x) {
+transform_nhanes_binary <- function(x) {
   case_when(
     x == 1 ~ 1,
     x == 2 ~ 0,
@@ -137,19 +141,20 @@ clean_nhanes_binary <- function(x) {
 
 data_merge <- data_merge %>%
   mutate(
-    previous_myocardial_infarction    = clean_nhanes_binary(previous_myocardial_infarction),
-    coronary_heart_disease            = clean_nhanes_binary(coronary_heart_disease),
-    angina_pectoris                   = clean_nhanes_binary(angina_pectoris),
-    cumulative_smoking_100_tabacco    = clean_nhanes_binary(cumulative_smoking_100_tabacco),
-    weekly_vigorous_physical_activity = clean_nhanes_binary(weekly_vigorous_physical_activity),
-    sleep_disorder_insomnia           = clean_nhanes_binary(sleep_disorder_insomnia),
-    family_history_mi_under_50        = clean_nhanes_binary(family_history_mi_under_50)
+    previous_myocardial_infarction    = transform_nhanes_binary(previous_myocardial_infarction),
+    coronary_heart_disease            = transform_nhanes_binary(coronary_heart_disease),
+    angina_pectoris                   = transform_nhanes_binary(angina_pectoris),
+    cumulative_smoking_100_tabacco    = transform_nhanes_binary(cumulative_smoking_100_tabacco),
+    weekly_vigorous_physical_activity = transform_nhanes_binary(weekly_vigorous_physical_activity),
+    sleep_disorder_insomnia           = transform_nhanes_binary(sleep_disorder_insomnia),
+    family_history_mi_under_50        = transform_nhanes_binary(family_history_mi_under_50)
   )
+
 ## Promedio de constantes clínicas (Presión arterial sistólica y diastólica)
 data_merge <- data_merge %>%
   mutate(
-    systolic_bp = rowMeans(cbind(systolic_bp_reading_1, systolic_bp_reading_2), na.rm = TRUE),
-    diastolic_bp = rowMeans(cbind(diastolic_bp_reading_1, diastolic_bp_reading_2), na.rm = TRUE)
+    systolic_average = rowMeans(cbind(systolic_bp_reading_1, systolic_bp_reading_2), na.rm = TRUE),
+    diastolic_average = rowMeans(cbind(diastolic_bp_reading_1, diastolic_bp_reading_2), na.rm = TRUE)
   )
 
 ## Depuración de sedentarismo (eliminar valores  > 1440 min) y escala en horas
@@ -160,3 +165,17 @@ data_merge <- data_merge %>%
   )
 
 names(data_merge)
+
+# Unificar variables para obtener un valor compuesto previous_myocardial_infarction, coronary_heart_disease y angina_pectoris
+table(data_merge$previous_myocardial_infarction)
+table(data_merge$coronary_heart_disease)
+table(data_merge$angina_pectoris)
+
+summary(data_merge$previous_myocardial_infarction)
+summary(data_merge$coronary_heart_disease)
+summary(data_merge$angina_pectoris)
+
+## Nos dimos cuenta que existen muchos valores NA en los datos que componen eventos cardiovasculares
+## Pero eso tiene la razon de que esta encuesta solo se hace a mayores de 20 años para los menores queda NA directamente.
+data_merge$is_old <- ifelse(data_merge$age >= 20, 1, 0)
+
