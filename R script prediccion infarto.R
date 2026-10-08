@@ -55,8 +55,6 @@ examination <- examination %>%
   )
 
 
-View(demographic)
-
 ## Selelcionar y renombrar campos questionnaire
 questionnaire <- questionnaire %>%
   select(
@@ -92,3 +90,34 @@ data_merge <- merge(data_merge_demographic_examination, questionnaire)
 
 View(data_merge)
 
+## Trasformar información
+table(data_merge$sex)
+map_age_type <- c("Male" = 1, "Female" = 2)
+map_race_type <- c(
+  "Mexican American" = 1,
+  "Other Hispanic" = 2,
+  "Non-Hispanic White" = 3,
+  "Non-Hispanic Black" = 4,
+  "Non-Hispanic Asian" = 6,
+  "Other Race - Including Multi-Racial" = 7,
+  "Don't Know / Refused" = 9
+)
+map_education_type <- c(
+  "Less than 9th grade" = 1,
+  "9-11th grade" = 2,
+  "High school graduate/GED or equivalent" = 3,
+  "Some college or AA degree" = 4,
+  "College graduate or above" = 5,
+  "Refused" = 7,
+  "Don't know" = 9
+)
+
+getKeyByValue <- function(data, map) {
+  names(map)[match(data, map)]
+}
+
+data_merge$sex <- getKeyByValue(data_merge$sex, map_age_type)
+data_merge$ethnicity_race <- getKeyByValue(data_merge$ethnicity_race, map_race_type)
+data_merge$education_level <- getKeyByValue(data_merge$education_level, map_education_type)
+
+names(data_merge)
