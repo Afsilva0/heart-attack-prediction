@@ -177,5 +177,74 @@ summary(data_merge$angina_pectoris)
 
 ## Nos dimos cuenta que existen muchos valores NA en los datos que componen eventos cardiovasculares
 ## Pero eso tiene la razon de que esta encuesta solo se hace a mayores de 20 años para los menores queda NA directamente.
+# Nota: La cohorte ya fue filtrada previamente en la línea 95 (filter(age >= 20)),
+# por lo que en este punto todos los registros cumplen age >= 20 (is_old valdrá siempre 1).
 data_merge$is_old <- ifelse(data_merge$age >= 20, 1, 0)
+
+# Construccion de variables diana
+# 1. ami_target (Infarto Aislado): Diagnóstico puntual de Infarto Agudo de Miocardio (1 = Sí, 0 = No).
+# 2. mace_target (Evento Compuesto MACE): Criterio clínico cardiológico integral.
+#    Vale 1 si el paciente ha tenido Infarto, Enfermedad Coronaria O Angina de Pecho.
+
+data_merge <- data_merge %>%
+  mutate(
+    ami_target = previous_myocardial_infarction,
+    mace_target = case_when(
+      previous_myocardial_infarction == 1 | 
+      coronary_heart_disease == 1 | 
+      angina_pectoris == 1 ~ 1,
+      is.na(previous_myocardial_infarction) & 
+      is.na(coronary_heart_disease) & 
+      is.na(angina_pectoris) ~ NA_real_,
+      TRUE ~ 0
+    )
+  )
+
+# Definición del conjunto de variables que alimentarán los modelos
+vars_modelo <- c(
+  # Identificador y dianas
+  "SEQN", "ami_target", "mace_target",
+  # Bloque 0: Demografía y nivel socioeconómico
+  "age", "sex", "ethnicity_race", "income_poverty_ratio",
+  # Bloque 1: Exploración clínica de consulta
+  "systolic_average", "diastolic_average", "resting_heart_rate", 
+  "body_mass_index", "waist_circumference",
+  # Bloque 2: Hábitos de vida y antecedentes
+  "cumulative_smoking_100_tabacco", "weekly_vigorous_physical_activity", 
+  "daily_sedentary_hours", "sleep_disorder_insomnia", "family_history_mi_under_50"
+)
+
+# Filtrado de casos completos en las variables del estudio (eliminando NAs)
+data_model <- data_merge %>%
+  select(all_of(vars_modelo)) %>%
+  na.omit()
+
+cat("\n--- COHORTE ANALÍTICA FINAL ---\n")
+cat("Registros completos disponibles para modelado:", nrow(data_model), "\n")
+cat("Prevalencia Infarto Aislado (ami_target):", 
+    round(mean(data_model$ami_target) * 100, 2), "%\n")
+cat("Prevalencia Evento Compuesto MACE (mace_target):", 
+    round(mean(data_model$mace_target) * 100, 2), "%\n")
+
+# Partición Estratificada 70% Entrenamiento / 30% Prueba
+# Fijamos semilla para asegurar la reproducibilidad exacta
+set.seed(42)
+
+# Muestreo estratificado por la diana principal (ami_target) para preservar la proporción de positivos
+idx_pos <- which(data_model$ami_target == 1)
+idx_neg <- which(data_model$ami_target == 0)
+
+train_idx <- c(
+  sample(idx_pos, size = round(0.70 * length(idx_pos))),
+  sample(idx_neg, size = round(0.70 * length(idx_neg)))
+)
+
+train_data <- data_model[train_idx, ]
+test_data  <- data_model[-train_idx, ]
+
+cat("\n--- PARTICIÓN ESTRATIFICADA (70% Train / 30% Test) ---\n")
+cat("Train set:", nrow(train_data), "individuos (Positivos:", sum(train_data$ami_target == 1), ")\n")
+cat("Test set: ", nrow(test_data),  "individuos (Positivos:", sum(test_data$ami_target == 1), ")\n")
+
+
 
