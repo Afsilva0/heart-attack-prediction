@@ -1,9 +1,7 @@
-
-
 ## Carga de datasets
-demographic_base <- read.csv('Dataset/demographic.csv', header = TRUE)
-examination_base <- read.csv('Dataset/examination.csv', header = TRUE)
-questionnaire_base <- read.csv('Dataset/questionnaire.csv', header = TRUE)
+demographic_base <- read.csv("Dataset/demographic.csv", header = TRUE)
+examination_base <- read.csv("Dataset/examination.csv", header = TRUE)
+questionnaire_base <- read.csv("Dataset/questionnaire.csv", header = TRUE)
 
 
 demographic <- demographic_base
@@ -30,8 +28,8 @@ demographic <- demographic %>%
     age = RIDAGEYR,
     sex = RIAGENDR,
     ethnicity_race = RIDRETH3,
-    income_poverty_ratio= INDFMPIR,
-    education_level  = DMDEDUC2
+    income_poverty_ratio = INDFMPIR,
+    education_level = DMDEDUC2
   )
 
 ## Selelcionar y renombrar campos examination
@@ -47,13 +45,13 @@ examination <- examination %>%
     BMXWAIST
   ) %>%
   rename(
-    systolic_bp_reading_1  = BPXSY1,
+    systolic_bp_reading_1 = BPXSY1,
     systolic_bp_reading_2 = BPXSY2,
-    diastolic_bp_reading_1  = BPXDI1,
+    diastolic_bp_reading_1 = BPXDI1,
     diastolic_bp_reading_2 = BPXDI2,
-    resting_heart_rate  = BPXPLS,
+    resting_heart_rate = BPXPLS,
     body_mass_index = BMXBMI,
-    waist_circumference= BMXWAIST
+    waist_circumference = BMXWAIST
   )
 
 
@@ -135,7 +133,7 @@ transform_nhanes_binary <- function(x) {
   case_when(
     x == 1 ~ 1,
     x == 2 ~ 0,
-    TRUE   ~ NA_real_
+    TRUE ~ NA_real_
   )
 }
 
@@ -190,12 +188,12 @@ data_merge <- data_merge %>%
   mutate(
     ami_target = previous_myocardial_infarction,
     mace_target = case_when(
-      previous_myocardial_infarction == 1 | 
-      coronary_heart_disease == 1 | 
-      angina_pectoris == 1 ~ 1,
-      is.na(previous_myocardial_infarction) & 
-      is.na(coronary_heart_disease) & 
-      is.na(angina_pectoris) ~ NA_real_,
+      previous_myocardial_infarction == 1 |
+        coronary_heart_disease == 1 |
+        angina_pectoris == 1 ~ 1,
+      is.na(previous_myocardial_infarction) &
+        is.na(coronary_heart_disease) &
+        is.na(angina_pectoris) ~ NA_real_,
       TRUE ~ 0
     )
   )
@@ -207,10 +205,10 @@ vars_modelo <- c(
   # Bloque 0: Demografía y nivel socioeconómico
   "age", "sex", "ethnicity_race", "income_poverty_ratio",
   # Bloque 1: Exploración clínica de consulta
-  "systolic_average", "diastolic_average", "resting_heart_rate", 
+  "systolic_average", "diastolic_average", "resting_heart_rate",
   "body_mass_index", "waist_circumference",
   # Bloque 2: Hábitos de vida y antecedentes
-  "cumulative_smoking_100_tabacco", "weekly_vigorous_physical_activity", 
+  "cumulative_smoking_100_tabacco", "weekly_vigorous_physical_activity",
   "daily_sedentary_hours", "sleep_disorder_insomnia", "family_history_mi_under_50"
 )
 
@@ -221,10 +219,14 @@ data_model <- data_merge %>%
 
 cat("\n--- COHORTE ANALÍTICA FINAL ---\n")
 cat("Registros completos disponibles para modelado:", nrow(data_model), "\n")
-cat("Prevalencia Infarto Aislado (ami_target):", 
-    round(mean(data_model$ami_target) * 100, 2), "%\n")
-cat("Prevalencia Evento Compuesto MACE (mace_target):", 
-    round(mean(data_model$mace_target) * 100, 2), "%\n")
+cat(
+  "Prevalencia Infarto Aislado (ami_target):",
+  round(mean(data_model$ami_target) * 100, 2), "%\n"
+)
+cat(
+  "Prevalencia Evento Compuesto MACE (mace_target):",
+  round(mean(data_model$mace_target) * 100, 2), "%\n"
+)
 
 # Partición Estratificada 70% Entrenamiento / 30% Prueba
 # Fijamos semilla para asegurar la reproducibilidad exacta
@@ -240,11 +242,42 @@ train_idx <- c(
 )
 
 train_data <- data_model[train_idx, ]
-test_data  <- data_model[-train_idx, ]
+test_data <- data_model[-train_idx, ]
 
 cat("\n--- PARTICIÓN ESTRATIFICADA (70% Train / 30% Test) ---\n")
 cat("Train set:", nrow(train_data), "individuos (Positivos:", sum(train_data$ami_target == 1), ")\n")
-cat("Test set: ", nrow(test_data),  "individuos (Positivos:", sum(test_data$ami_target == 1), ")\n")
+cat("Test set: ", nrow(test_data), "individuos (Positivos:", sum(test_data$ami_target == 1), ")\n")
 
 
+# M0: Modelo Base Demográfico y Socioeconómico
+m0_demo <- glm(
+  ami_target ~ age + sex + ethnicity_race + income_poverty_ratio,
+  data = train_data,
+  family = binomial()
+)
 
+# M1: M0 + Constantes Clínicas Objetivas de Consulta
+m1_clinico <- glm(
+  ami_target ~ age + sex + ethnicity_race + income_poverty_ratio +
+    systolic_average + diastolic_average + resting_heart_rate +
+    body_mass_index + waist_circumference,
+  data = train_data,
+  family = binomial()
+)
+
+# M2: M1 + Hábitos de Vida Modificables y Antecedentes
+m2_integral <- glm(
+  ami_target ~ age + sex + ethnicity_race + income_poverty_ratio +
+    systolic_average + diastolic_average + resting_heart_rate +
+    body_mass_index + waist_circumference +
+    cumulative_smoking_100_tabacco + weekly_vigorous_physical_activity +
+    daily_sedentary_hours + sleep_disorder_insomnia +
+    family_history_mi_under_50,
+  data = train_data,
+  family = binomial()
+)
+
+cat("\n--- MODELOS JERÁRQUICOS ENTRENADOS (AIC) ---\n")
+cat("AIC M0 (Demografía):          ", round(AIC(m0_demo), 2), "\n")
+cat("AIC M1 (+ Clínicos):           ", round(AIC(m1_clinico), 2), "\n")
+cat("AIC M2 (+ Hábitos / Integral): ", round(AIC(m2_integral), 2), "\n")
