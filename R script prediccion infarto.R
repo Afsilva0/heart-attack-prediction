@@ -8,11 +8,16 @@ demographic <- demographic_base
 examination <- examination_base
 questionnaire <- questionnaire_base
 
-## Se carga dplyr
+## Se cargan librerías necesarias
 if (!requireNamespace("dplyr", quietly = TRUE)) {
   install.packages("dplyr")
 }
 library(dplyr)
+
+if (!requireNamespace("pROC", quietly = TRUE)) {
+  install.packages("pROC")
+}
+library(pROC)
 
 ## Selelcionar y renombrar campos demographic
 demographic <- demographic %>%
@@ -281,3 +286,47 @@ cat("\n--- MODELOS JERÁRQUICOS ENTRENADOS (AIC) ---\n")
 cat("AIC M0 (Demografía):          ", round(AIC(m0_demo), 2), "\n")
 cat("AIC M1 (+ Clínicos):           ", round(AIC(m1_clinico), 2), "\n")
 cat("AIC M2 (+ Hábitos / Integral): ", round(AIC(m2_integral), 2), "\n")
+
+# Predicciones de probabilidad sobre el conjunto de prueba (test_data)
+prob_m0 <- predict(m0_demo, newdata = test_data, type = "response")
+prob_m1 <- predict(m1_clinico, newdata = test_data, type = "response")
+prob_m2 <- predict(m2_integral, newdata = test_data, type = "response")
+
+# Construcción de curvas ROC sobre test_data
+roc_m0 <- roc(test_data$ami_target, prob_m0, quiet = TRUE)
+roc_m1 <- roc(test_data$ami_target, prob_m1, quiet = TRUE)
+roc_m2 <- roc(test_data$ami_target, prob_m2, quiet = TRUE)
+
+auc_m0 <- as.numeric(auc(roc_m0))
+auc_m1 <- as.numeric(auc(roc_m1))
+auc_m2 <- as.numeric(auc(roc_m2))
+
+cat("\n--- COMPARATIVA DE DISCRIMINACIÓN EN TEST (AUC) ---\n")
+cat("AUC M0 (Demografía):          ", round(auc_m0, 3), "\n")
+cat("AUC M1 (+ Clínicos):           ", round(auc_m1, 3), "\n")
+cat("AUC M2 (+ Hábitos / Integral): ", round(auc_m2, 3), "\n")
+cat("Ganancia absoluta de M2 vs M1: +", round((auc_m2 - auc_m1) * 100, 2), "puntos porcentuales de AUC\n")
+
+# Gráfica comparativa de las 3 Curvas ROC superpuestas y exportación a PNG
+png("curvas_roc_modelos.png", width = 800, height = 700, res = 120)
+
+plot(roc_m0, col = "#2b5c8f", lwd = 2.5, 
+     main = "Comparativa de Modelos Jerárquicos (Curvas ROC en Test)",
+     xlab = "Especificidad", ylab = "Sensibilidad",
+     legacy.axes = TRUE)
+plot(roc_m1, col = "#c0392b", lwd = 2.5, add = TRUE)
+plot(roc_m2, col = "#27ae60", lwd = 2.5, add = TRUE)
+abline(a = 0, b = 1, lty = 2, col = "grey50")
+
+legend("bottomright", 
+       legend = c(
+         paste0("M0: Demografía (AUC = ", sprintf("%.3f", auc_m0), ")"),
+         paste0("M1: Clínicos (AUC = ", sprintf("%.3f", auc_m1), ")"),
+         paste0("M2: Hábitos / Integral (AUC = ", sprintf("%.3f", auc_m2), ")")
+       ),
+       col = c("#2b5c8f", "#c0392b", "#27ae60"), 
+       lwd = 2.5, bty = "o", bg = "white")
+
+dev.off()
+cat("\nGráfico exportado correctamente a 'curvas_roc_modelos.png'.\n")
+
