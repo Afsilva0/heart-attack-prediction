@@ -1,5 +1,4 @@
 ## ==============================================================================
-# 01_preparacion_datos.R
 # Carga, limpieza y partición de los datos NHANES para predicción cardiovascular
 ## ==============================================================================
 

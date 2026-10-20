@@ -1,5 +1,4 @@
 ## ==============================================================================
-# 02_modelos.R
 # Ajuste de modelos predictivos (regresión logística y Random Forest)
 # Deja disponibles: m0_mace, m1_mace, m2_mace, m2_ami, rf_model,
 #                   prob_*, roc_*, auc_*
