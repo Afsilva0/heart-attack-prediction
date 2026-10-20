@@ -8,7 +8,7 @@ source("01_preparacion_datos.R")
 cat("\n Ejecutando 02_modelos.R ...\n")
 source("02_modelos.R")
 
-cat("\n 03_interpretacion_graficas.R ...\n")
+cat("\n Ejecutando 03_interpretacion_graficas.R ...\n")
 source("03_interpretacion_graficas.R")
 
 cat("\n=======================================================\n")
