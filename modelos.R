@@ -4,7 +4,7 @@
 #                   prob_*, roc_*, auc_*
 ## ==============================================================================
 
-source("01_preparacion_datos.R")
+source("preparacion_datos.R")
 
 if (!requireNamespace("pROC", quietly = TRUE)) {
   install.packages("pROC")
