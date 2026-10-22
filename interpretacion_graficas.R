@@ -314,4 +314,109 @@ p_sed <- ggplot(df_partial, aes(x = horas, y = efecto)) +
 ggsave("curva_sedentarismo_partialplot.png", plot = p_sed, width = 8.0, height = 5.5, dpi = 150)
 cat("Gráfico de Umbral de Sedentarismo exportado a 'curva_sedentarismo_partialplot.png'.\n")
 
+
+# ==============================================================================
+# EJE 4: AUDITORÍA DE EQUIDAD (FAIRNESS) Y SESGO DE GÉNERO
+# ==============================================================================
+
+cat("\n=======================================================\n")
+cat("--- EJE 4: AUDITORÍA DE EQUIDAD POR GÉNERO (FAIRNESS) ---\n")
+cat("=======================================================\n")
+
+# Evaluar discriminación y calibración separada por sexo en test_data
+df_test_fairness <- test_data
+df_test_fairness$prob <- prob_m2_mace
+
+# Curvas ROC desagregadas
+roc_female <- roc(df_test_fairness$mace_target[df_test_fairness$sex == "Female"], 
+                  df_test_fairness$prob[df_test_fairness$sex == "Female"], quiet = TRUE)
+roc_male   <- roc(df_test_fairness$mace_target[df_test_fairness$sex == "Male"], 
+                  df_test_fairness$prob[df_test_fairness$sex == "Male"], quiet = TRUE)
+
+auc_female <- as.numeric(auc(roc_female))
+auc_male   <- as.numeric(auc(roc_male))
+
+# Umbral clínico balanceado general (Youden)
+coords_youden <- coords(roc_m2_mace, "best", best.method = "closest.topleft")
+th_opt <- coords_youden$threshold[1]
+
+# Métricas por subgrupo
+df_test_fairness$pred_opt <- ifelse(df_test_fairness$prob >= th_opt, 1, 0)
+
+by_sex <- split(df_test_fairness, df_test_fairness$sex)
+fairness_summary <- do.call(rbind, lapply(names(by_sex), function(s) {
+  sub <- by_sex[[s]]
+  n_total <- nrow(sub)
+  n_pos <- sum(sub$mace_target == 1)
+  tp <- sum(sub$mace_target == 1 & sub$pred_opt == 1)
+  fn <- sum(sub$mace_target == 1 & sub$pred_opt == 0)
+  fp <- sum(sub$mace_target == 0 & sub$pred_opt == 1)
+  tn <- sum(sub$mace_target == 0 & sub$pred_opt == 0)
+  
+  data.frame(
+    Grupo = ifelse(s == "Female", "Mujeres", "Hombres"),
+    N_Total = n_total,
+    Eventos = n_pos,
+    Prevalencia_pct = round((n_pos / n_total) * 100, 2),
+    AUC = round(ifelse(s == "Female", auc_female, auc_male), 3),
+    Sensibilidad_pct = round((tp / n_pos) * 100, 1),
+    Especificidad_pct = round((tn / (tn + fp)) * 100, 1),
+    Tasa_Falsos_Neg_pct = round((fn / n_pos) * 100, 1)
+  )
+}))
+
+cat("\n--- TABLA DE EQUIDAD Y DISPARIDAD DE GÉNERO (Umbral Youden =", round(th_opt, 3), ") ---\n")
+print(fairness_summary)
+
+# Gráfico comparativo de Curvas ROC por Género (ggplot2)
+df_roc_fem <- data.frame(
+  fpr = 1 - roc_female$specificities,
+  tpr = roc_female$sensitivities,
+  sexo = paste0("Mujeres (AUC = ", sprintf("%.3f", auc_female), ")")
+)
+df_roc_masc <- data.frame(
+  fpr = 1 - roc_male$specificities,
+  tpr = roc_male$sensitivities,
+  sexo = paste0("Hombres (AUC = ", sprintf("%.3f", auc_male), ")")
+)
+df_roc_sexo <- rbind(df_roc_fem, df_roc_masc)
+df_roc_sexo$sexo <- factor(df_roc_sexo$sexo, levels = unique(df_roc_sexo$sexo))
+
+p_fairness <- ggplot(df_roc_sexo, aes(x = fpr, y = tpr, color = sexo)) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray55", linewidth = 0.8) +
+  geom_line(linewidth = 1.25) +
+  scale_color_manual(values = c("#8e24aa", "#1976d2")) +
+  scale_x_continuous(
+    name = "1 - Especificidad (Tasa de Falsos Positivos)",
+    limits = c(0, 1),
+    breaks = seq(0, 1, 0.2),
+    expand = c(0.01, 0.01)
+  ) +
+  scale_y_continuous(
+    name = "Sensibilidad (Tasa de Verdaderos Positivos)",
+    limits = c(0, 1),
+    breaks = seq(0, 1, 0.2),
+    expand = c(0.01, 0.01)
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title    = element_text(face = "bold", size = 15, hjust = 0.5, margin = margin(b = 6)),
+    plot.subtitle = element_text(size = 11, color = "gray30", hjust = 0.5, margin = margin(b = 12)),
+    legend.position = c(0.68, 0.22),
+    legend.background = element_rect(fill = alpha("white", 0.92), color = "gray80", linewidth = 0.5),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 10, face = "bold"),
+    legend.key.width = unit(1.2, "cm"),
+    panel.grid.minor = element_blank(),
+    panel.border  = element_rect(color = "gray75", fill = NA, linewidth = 0.8)
+  ) +
+  labs(
+    title = "Auditoría de Equidad Algorítmica por Género (Fairness)",
+    subtitle = "Capacidad de discriminación del Modelo Integral M2 desagregada por sexo en Test"
+  )
+
+ggsave("curvas_roc_fairness_genero.png", plot = p_fairness, width = 7.5, height = 6.5, dpi = 150)
+cat("Gráfico de Equidad por Género exportado a 'curvas_roc_fairness_genero.png'.\n")
+
 cat("\n--- interpretacion_graficas.R finalizado correctamente ---\n")
+
