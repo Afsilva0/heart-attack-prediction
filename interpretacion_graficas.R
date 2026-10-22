@@ -31,44 +31,21 @@ cat("P-valor de DeLong:", round(test_delong$p.value, 4),
 
 cat("\n--- Generando gráficas ROC (Modelos Jerárquicos MACE) ---\n")
 
-# Versión Base R
-png("curvas_roc_modelos.png", width = 800, height = 700, res = 120)
-
-plot(roc_m0_mace, col = "#2b5c8f", lwd = 2.5, 
-     main = "Comparativa de Modelos Jerárquicos (Curvas ROC en Test - Diana MACE)",
-     xlab = "Especificidad", ylab = "Sensibilidad",
-     legacy.axes = TRUE)
-plot(roc_m1_mace, col = "#c0392b", lwd = 2.5, add = TRUE)
-plot(roc_m2_mace, col = "#27ae60", lwd = 2.5, add = TRUE)
-abline(a = 0, b = 1, lty = 2, col = "grey50")
-
-legend("bottomright", 
-       legend = c(
-         paste0("M0: Demografía (AUC = ", sprintf("%.3f", auc_m0_mace), ")"),
-         paste0("M1: Clínicos (AUC = ", sprintf("%.3f", auc_m1_mace), ")"),
-         paste0("M2: Hábitos / Integral (AUC = ", sprintf("%.3f", auc_m2_mace), ")")
-       ),
-       col = c("#2b5c8f", "#c0392b", "#27ae60"), 
-       lwd = 2.5, bty = "o", bg = "white")
-
-dev.off()
-cat("Gráfico exportado correctamente a 'curvas_roc_modelos.png'.\n")
-
 # Versión ggplot2 (corregida)
 df_roc0 <- data.frame(
   fpr = 1 - roc_m0_mace$specificities,
   tpr = roc_m0_mace$sensitivities,
-  modelo = paste0("M0: Demografía (AUC = ", sprintf("%.3f", auc_m0_mace), ")")
+  modelo = paste0("M0: Demografía y nivel socioeconómico (AUC = ", sprintf("%.3f", auc_m0_mace), ")")
 )
 df_roc1 <- data.frame(
   fpr = 1 - roc_m1_mace$specificities,
   tpr = roc_m1_mace$sensitivities,
-  modelo = paste0("M1: Clínicos (AUC = ", sprintf("%.3f", auc_m1_mace), ")")
+  modelo = paste0("M1: M0 + variables clínicas (AUC = ", sprintf("%.3f", auc_m1_mace), ")")
 )
 df_roc2 <- data.frame(
   fpr = 1 - roc_m2_mace$specificities,
   tpr = roc_m2_mace$sensitivities,
-  modelo = paste0("M2: Hábitos / Integral (AUC = ", sprintf("%.3f", auc_m2_mace), ")")
+  modelo = paste0("M2: M1 + hábitos y antecedentes (AUC = ", sprintf("%.3f", auc_m2_mace), ")")
 )
 df_roc_all <- rbind(df_roc0, df_roc1, df_roc2)
 df_roc_all$modelo <- factor(df_roc_all$modelo, levels = unique(df_roc_all$modelo))
@@ -337,4 +314,4 @@ p_sed <- ggplot(df_partial, aes(x = horas, y = efecto)) +
 ggsave("curva_sedentarismo_partialplot.png", plot = p_sed, width = 8.0, height = 5.5, dpi = 150)
 cat("Gráfico de Umbral de Sedentarismo exportado a 'curva_sedentarismo_partialplot.png'.\n")
 
-cat("\n--- 03_interpretacion_graficas.R finalizado correctamente ---\n")
+cat("\n--- interpretacion_graficas.R finalizado correctamente ---\n")

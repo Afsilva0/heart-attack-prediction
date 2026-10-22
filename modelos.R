@@ -122,4 +122,4 @@ cat("  M2 (Infarto Aislado - ami):  ", sprintf("%.3f", auc_ami), "\n")
 cat("\nGanancia absoluta de M2 vs M1 (MACE): +", 
     round((auc_m2_mace - auc_m1_mace) * 100, 2), "puntos porcentuales de AUC\n")
 
-cat("\n--- 02_modelos.R finalizado correctamente ---\n")
+cat("\n--- modelos.R finalizado correctamente ---\n")
