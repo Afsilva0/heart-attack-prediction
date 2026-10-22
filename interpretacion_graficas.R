@@ -179,11 +179,11 @@ cat("Gráfico comparativo exportado correctamente a 'curva_roc_mace_vs_infarto.p
 
 cat("\n--- Generando Forest Plot de Odds Ratios (Infarto Aislado) ---\n")
 
-or_ami <- exp(cbind(OR = coef(m2_ami), confint.default(m2_ami)))
-cat("\n--- ODDS RATIOS (OR) E INTERVALOS DE CONFIANZA 95% (Infarto Aislado) ---\n")
-print(round(or_ami, 3))
+or_mace <- exp(cbind(OR = coef(m2_mace), confint.default(m2_mace)))
+cat("\n--- ODDS RATIOS (OR) E INTERVALOS DE CONFIANZA 95% (MACE) ---\n")
+print(round(or_mace, 3))
 
-or_data <- as.data.frame(or_ami)
+or_data <- as.data.frame(or_mace)
 colnames(or_data) <- c("OR", "Lower_CI", "Upper_CI")
 or_data$Variable <- rownames(or_data)
 
@@ -241,11 +241,11 @@ p_forest <- ggplot(df_forest, aes(x = OR, y = Nombre, color = Significativo)) +
     panel.border = element_rect(color = "gray75", fill = NA, linewidth = 0.8)
   ) +
   labs(
-    title = "Impacto Clínico de Factores y Hábitos sobre el Riesgo de Infarto Aislado (ami_target)",
-    subtitle = "Odds Ratios ajustados por edad, clínica y entorno socioeconómico (NHANES)"
+    title = "Impacto Clínico de Factores y Hábitos sobre el Riesgo Cardiovascular (MACE)",
+    subtitle = "Odds Ratios ajustados por edad, clínica y entorno socioeconómico (NHANES)",
   )
 
-ggsave("forest_plot_riesgo_ami.png", plot = p_forest, width = 9.0, height = 7.0, dpi = 150)
+ggsave("forest_plot_riesgo_mace.png", plot = p_forest, width = 9.0, height = 7.0, dpi = 150)
 cat("Forest Plot exportado correctamente a 'forest_plot_riesgo_ami.png'.\n")
 
 # ==============================================================================
