@@ -218,7 +218,7 @@ p_forest <- ggplot(df_forest, aes(x = OR, y = Nombre, color = Significativo)) +
     panel.border = element_rect(color = "gray75", fill = NA, linewidth = 0.8)
   ) +
   labs(
-    title = "Impacto Clínico de Factores y Hábitos sobre el Riesgo Cardiovascular (MACE)",
+    title = "Impacto Clínico de Factores y Hábitos\nsobre el Riesgo Cardiovascular (MACE)",
     subtitle = "Odds Ratios ajustados por edad, clínica y entorno socioeconómico (NHANES)",
   )
 
