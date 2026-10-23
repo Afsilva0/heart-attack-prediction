@@ -21,9 +21,11 @@ print(anova(m0_mace, m1_mace, m2_mace, test = "Chisq"))
 cat("\n2. Test de DeLong (Diferencia estadística de AUC entre M1 y M2 en Test):\n")
 test_delong <- roc.test(roc_m1_mace, roc_m2_mace)
 print(test_delong)
-cat("P-valor de DeLong:", round(test_delong$p.value, 4), 
-    "-> La mejora de M2 sobre M1 es", 
-    ifelse(test_delong$p.value < 0.05, "estadísticamente significativa (p < 0.05)", "no significativa (p >= 0.05)"), ".\n")
+cat(
+  "P-valor de DeLong:", round(test_delong$p.value, 4),
+  "-> La mejora de M2 sobre M1 es",
+  ifelse(test_delong$p.value < 0.05, "estadísticamente significativa (p < 0.05)", "no significativa (p >= 0.05)"), ".\n"
+)
 
 # ==============================================================================
 # GRÁFICAS ROC - MODELOS JERÁRQUICOS MACE
@@ -168,25 +170,25 @@ df_forest <- or_data %>%
   filter(Variable != "(Intercept)") %>%
   mutate(
     Nombre = case_when(
-      Variable == "age"                                ~ "Edad (por cada año)",
-      Variable == "sexMale"                            ~ "Sexo Masculino",
-      Variable == "family_history_mi_under_50"         ~ "Historial Familiar Cardíaco (<50 años)",
-      Variable == "sleep_disorder_insomnia"            ~ "Insomnio / Trastorno del Sueño",
-      Variable == "cumulative_smoking_100_tabacco"     ~ "Fumador Histórico (>= 100 cig)",
-      Variable == "income_poverty_ratio"               ~ "Nivel Socioeconómico (Ratio Pobreza)",
-      Variable == "waist_circumference"                ~ "Perímetro de Cintura (cm)",
-      Variable == "body_mass_index"                    ~ "Índice de Masa Corporal (IMC)",
-      Variable == "daily_sedentary_hours"              ~ "Horas de Sedentarismo al Día",
-      Variable == "weekly_vigorous_physical_activity"  ~ "Actividad Física Vigorosa Semanal",
-      Variable == "systolic_average"                   ~ "Tensión Arterial Sistólica Media",
-      Variable == "diastolic_average"                  ~ "Tensión Arterial Diastólica Media",
-      Variable == "resting_heart_rate"                 ~ "Pulso en Reposo",
+      Variable == "age" ~ "Edad (por cada año)",
+      Variable == "sexMale" ~ "Sexo Masculino",
+      Variable == "family_history_mi_under_50" ~ "Historial Familiar Cardíaco (<50 años)",
+      Variable == "sleep_disorder_insomnia" ~ "Insomnio / Trastorno del Sueño",
+      Variable == "cumulative_smoking_100_tabacco" ~ "Fumador Histórico (>= 100 cig)",
+      Variable == "income_poverty_ratio" ~ "Nivel Socioeconómico (Ratio Pobreza)",
+      Variable == "waist_circumference" ~ "Perímetro de Cintura (cm)",
+      Variable == "body_mass_index" ~ "Índice de Masa Corporal (IMC)",
+      Variable == "daily_sedentary_hours" ~ "Horas de Sedentarismo al Día",
+      Variable == "weekly_vigorous_physical_activity" ~ "Actividad Física Vigorosa Semanal",
+      Variable == "systolic_average" ~ "Tensión Arterial Sistólica Media",
+      Variable == "diastolic_average" ~ "Tensión Arterial Diastólica Media",
+      Variable == "resting_heart_rate" ~ "Pulso en Reposo",
       TRUE ~ Variable
     ),
     Significativo = case_when(
       Lower_CI > 1.0 ~ "Factor de Riesgo Significativo (p < 0.05)",
       Upper_CI < 1.0 ~ "Factor Protector Significativo (p < 0.05)",
-      TRUE           ~ "No Significativo (IC cruza el 1.0)"
+      TRUE ~ "No Significativo (IC cruza el 1.0)"
     )
   )
 
@@ -198,8 +200,8 @@ p_forest <- ggplot(df_forest, aes(x = OR, y = Nombre, color = Significativo)) +
   geom_point(size = 3.2) +
   scale_color_manual(values = c(
     "Factor de Riesgo Significativo (p < 0.05)" = "#d9534f",
-    "Factor Protector Significativo (p < 0.05)"  = "#2b5c8f",
-    "No Significativo (IC cruza el 1.0)"        = "gray60"
+    "Factor Protector Significativo (p < 0.05)" = "#2b5c8f",
+    "No Significativo (IC cruza el 1.0)" = "gray60"
   )) +
   scale_x_log10(
     name = "Odds Ratio (Escala Logarítmica - IC 95%)",
@@ -266,11 +268,11 @@ p_imp <- ggplot(df_imp, aes(x = Gini, y = Nombre)) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.12))) +
   theme_minimal(base_size = 12) +
   theme(
-    plot.title    = element_text(face = "bold", size = 14, hjust = 0.5),
+    plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
     plot.subtitle = element_text(size = 10.5, color = "gray30", hjust = 0.5, margin = ggplot2::margin(b = 10)),
-    axis.title.y  = element_blank(),
+    axis.title.y = element_blank(),
     panel.grid.minor = element_blank(),
-    panel.border  = element_rect(color = "gray75", fill = NA, linewidth = 0.8)
+    panel.border = element_rect(color = "gray75", fill = NA, linewidth = 0.8)
   ) +
   labs(
     title = "Ranking de Importancia de Variables (Random Forest)",
@@ -294,15 +296,17 @@ p_sed <- ggplot(df_partial, aes(x = horas, y = efecto)) +
   geom_line(color = "#c0392b", linewidth = 1.3) +
   geom_point(color = "#c0392b", size = 2) +
   geom_vline(xintercept = 8, linetype = "dashed", color = "gray40", linewidth = 0.9) +
-  annotate("text", x = 8.3, y = min(df_partial$efecto) + 0.3 * diff(range(df_partial$efecto)),
-           label = "Umbral Crítico:\n> 8 horas/día", hjust = 0, fontface = "bold", color = "#c0392b") +
+  annotate("text",
+    x = 8.3, y = min(df_partial$efecto) + 0.3 * diff(range(df_partial$efecto)),
+    label = "Umbral Crítico:\n> 8 horas/día", hjust = 0, fontface = "bold", color = "#c0392b"
+  ) +
   scale_x_continuous(breaks = seq(0, 16, 2)) +
   theme_minimal(base_size = 12) +
   theme(
-    plot.title    = element_text(face = "bold", size = 14, hjust = 0.5),
+    plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
     plot.subtitle = element_text(size = 10.5, color = "gray30", hjust = 0.5, margin = ggplot2::margin(b = 10)),
     panel.grid.minor = element_blank(),
-    panel.border  = element_rect(color = "gray75", fill = NA, linewidth = 0.8)
+    panel.border = element_rect(color = "gray75", fill = NA, linewidth = 0.8)
   ) +
   labs(
     title = "Efecto Umbral del Sedentarismo Diario sobre el Riesgo Cardiovascular",
@@ -316,11 +320,11 @@ cat("Gráfico de Umbral de Sedentarismo exportado a 'curva_sedentarismo_partialp
 
 
 # ==============================================================================
-# EJE 4: AUDITORÍA DE EQUIDAD (FAIRNESS) Y SESGO DE GÉNERO
+# AUDITORÍA DE EQUIDAD (FAIRNESS) Y SESGO DE GÉNERO
 # ==============================================================================
 
 cat("\n=======================================================\n")
-cat("--- EJE 4: AUDITORÍA DE EQUIDAD POR GÉNERO (FAIRNESS) ---\n")
+cat("--- AUDITORÍA DE EQUIDAD POR GÉNERO (FAIRNESS) ---\n")
 cat("=======================================================\n")
 
 # Evaluar discriminación y calibración separada por sexo en test_data
@@ -328,13 +332,17 @@ df_test_fairness <- test_data
 df_test_fairness$prob <- prob_m2_mace
 
 # Curvas ROC desagregadas
-roc_female <- roc(df_test_fairness$mace_target[df_test_fairness$sex == "Female"], 
-                  df_test_fairness$prob[df_test_fairness$sex == "Female"], quiet = TRUE)
-roc_male   <- roc(df_test_fairness$mace_target[df_test_fairness$sex == "Male"], 
-                  df_test_fairness$prob[df_test_fairness$sex == "Male"], quiet = TRUE)
+roc_female <- roc(df_test_fairness$mace_target[df_test_fairness$sex == "Female"],
+  df_test_fairness$prob[df_test_fairness$sex == "Female"],
+  quiet = TRUE
+)
+roc_male <- roc(df_test_fairness$mace_target[df_test_fairness$sex == "Male"],
+  df_test_fairness$prob[df_test_fairness$sex == "Male"],
+  quiet = TRUE
+)
 
 auc_female <- as.numeric(auc(roc_female))
-auc_male   <- as.numeric(auc(roc_male))
+auc_male <- as.numeric(auc(roc_male))
 
 # Umbral clínico balanceado general (Youden)
 coords_youden <- coords(roc_m2_mace, "best", best.method = "closest.topleft")
@@ -352,7 +360,7 @@ fairness_summary <- do.call(rbind, lapply(names(by_sex), function(s) {
   fn <- sum(sub$mace_target == 1 & sub$pred_opt == 0)
   fp <- sum(sub$mace_target == 0 & sub$pred_opt == 1)
   tn <- sum(sub$mace_target == 0 & sub$pred_opt == 0)
-  
+
   data.frame(
     Grupo = ifelse(s == "Female", "Mujeres", "Hombres"),
     N_Total = n_total,
@@ -400,7 +408,7 @@ p_fairness <- ggplot(df_roc_sexo, aes(x = fpr, y = tpr, color = sexo)) +
   ) +
   theme_minimal(base_size = 13) +
   theme(
-    plot.title    = element_text(face = "bold", size = 15, hjust = 0.5, margin = margin(b = 6)),
+    plot.title = element_text(face = "bold", size = 15, hjust = 0.5, margin = margin(b = 6)),
     plot.subtitle = element_text(size = 11, color = "gray30", hjust = 0.5, margin = margin(b = 12)),
     legend.position = c(0.68, 0.22),
     legend.background = element_rect(fill = alpha("white", 0.92), color = "gray80", linewidth = 0.5),
@@ -408,7 +416,7 @@ p_fairness <- ggplot(df_roc_sexo, aes(x = fpr, y = tpr, color = sexo)) +
     legend.text = element_text(size = 10, face = "bold"),
     legend.key.width = unit(1.2, "cm"),
     panel.grid.minor = element_blank(),
-    panel.border  = element_rect(color = "gray75", fill = NA, linewidth = 0.8)
+    panel.border = element_rect(color = "gray75", fill = NA, linewidth = 0.8)
   ) +
   labs(
     title = "Auditoría de Equidad Algorítmica por Género (Fairness)",
@@ -418,5 +426,89 @@ p_fairness <- ggplot(df_roc_sexo, aes(x = fpr, y = tpr, color = sexo)) +
 ggsave("curvas_roc_fairness_genero.png", plot = p_fairness, width = 7.5, height = 6.5, dpi = 150)
 cat("Gráfico de Equidad por Género exportado a 'curvas_roc_fairness_genero.png'.\n")
 
-cat("\n--- interpretacion_graficas.R finalizado correctamente ---\n")
+cat("\n=======================================================\n")
+cat("--- EVALUACIÓN SENSIBLE AL COSTE E ISO-COSTE ---\n")
+cat("=======================================================\n")
 
+# Parámetros clínicos de la Matriz de Costes:
+# Un Falso Negativo (enfermo no detectado) se penaliza 10 veces más que un Falso Positivo (falsa alarma)
+coste_fp <- 1
+coste_fn <- 10
+prev_test <- mean(test_data$mace_target == 1)
+
+# Pendiente matemática de la recta de Iso-Coste
+m_iso <- ((1 - prev_test) / prev_test) * (coste_fp / coste_fn)
+
+# Búsqueda de corte óptimo en todas las coordenadas ROC
+coords_mace <- coords(roc_m2_mace, "all", ret = c("threshold", "specificity", "sensitivity"))
+coords_mace$coste_esperado <- (1 - prev_test) * coste_fp * (1 - coords_mace$specificity) +
+  prev_test * coste_fn * (1 - coords_mace$sensitivity)
+
+idx_opt_coste <- which.min(coords_mace$coste_esperado)
+opt_coste <- coords_mace[idx_opt_coste, ]
+
+th_opt_coste <- opt_coste$threshold
+x_opt <- 1 - opt_coste$specificity
+y_opt <- opt_coste$sensitivity
+b_iso <- y_opt - m_iso * x_opt
+
+cat("Prevalencia MACE en Test:        ", round(prev_test * 100, 2), "%\n")
+cat("Costes relativos:                 C(FP) =", coste_fp, "| C(FN) =", coste_fn, "\n")
+cat("Pendiente Recta Iso-Coste (m):   ", round(m_iso, 4), "\n")
+cat("Umbral Óptimo Sensible al Coste: ", round(th_opt_coste, 4), "(frente al 0.5 por defecto)\n")
+cat("  -> Sensibilidad conseguida:    ", round(y_opt * 100, 1), "%\n")
+cat("  -> Especificidad conseguida:   ", round(opt_coste$specificity * 100, 1), "%\n")
+cat("  -> Coste esperado mínimo:      ", round(opt_coste$coste_esperado, 4), "\n")
+
+# Gráfica de la Curva ROC con la Recta de Iso-Coste tangente
+df_roc_m2_curve <- data.frame(
+  fpr = 1 - roc_m2_mace$specificities,
+  tpr = roc_m2_mace$sensitivities
+)
+
+p_isocost <- ggplot(df_roc_m2_curve, aes(x = fpr, y = tpr)) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray60", linewidth = 0.8) +
+  geom_line(color = "#27ae60", linewidth = 1.3) +
+  geom_abline(intercept = b_iso, slope = m_iso, color = "#d35400", linetype = "longdash", linewidth = 1.1) +
+  annotate("point", x = x_opt, y = y_opt, color = "#d35400", size = 4.2) +
+  annotate("text",
+    x = x_opt + 0.04, y = y_opt - 0.06,
+    label = paste0(
+      "Punto Óptimo Tangente\nUmbral = ", round(th_opt_coste, 3),
+      "\nSens = ", round(y_opt * 100, 1), "%\nEspec = ", round(opt_coste$specificity * 100, 1), "%"
+    ),
+    hjust = 0, fontface = "bold", size = 3.6, color = "#962d00"
+  ) +
+  annotate("text",
+    x = 0.52, y = 0.96,
+    label = paste0("Recta de Iso-Coste (m = ", round(m_iso, 2), ")\nMatriz de Costes: C(FN)/C(FP) = 10"),
+    hjust = 0, fontface = "italic", size = 3.4, color = "#d35400"
+  ) +
+  scale_x_continuous(
+    name = "1 - Especificidad (Tasa de Falsos Positivos)",
+    limits = c(0, 1),
+    breaks = seq(0, 1, 0.2),
+    expand = c(0.01, 0.01)
+  ) +
+  scale_y_continuous(
+    name = "Sensibilidad (Tasa de Verdaderos Positivos)",
+    limits = c(0, 1),
+    breaks = seq(0, 1, 0.2),
+    expand = c(0.01, 0.01)
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(face = "bold", size = 15, hjust = 0.5, margin = margin(b = 6)),
+    plot.subtitle = element_text(size = 11, color = "gray30", hjust = 0.5, margin = margin(b = 12)),
+    panel.grid.minor = element_blank(),
+    panel.border = element_rect(color = "gray75", fill = NA, linewidth = 0.8)
+  ) +
+  labs(
+    title = "Evaluación Sensible al Coste y Recta de Iso-Coste (M2)",
+    subtitle = "Optimización de umbral asistencial penalizando el Falso Negativo (C(FN) = 10 x C(FP))"
+  )
+
+ggsave("curva_roc_isocoste_optimo.png", plot = p_isocost, width = 7.5, height = 6.5, dpi = 150)
+cat("Gráfico de Recta de Iso-Coste exportado a 'curva_roc_isocoste_optimo.png'.\n")
+
+cat("\n--- interpretacion_graficas.R finalizado correctamente ---\n")
