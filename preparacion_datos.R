@@ -185,10 +185,25 @@ data_merge <- data_merge %>%
     )
   )
 
+# 3. tipo_evento (Especificación de la patología): categoría ÚNICA y EXCLUYENTE.
+#    Un mismo paciente puede declarar varias patologías a la vez (p.ej. infarto + angina),
+#    así que se le asigna la más grave según la jerarquía clínica:
+#    Infarto  >  Enfermedad coronaria (sin infarto)  >  Angina aislada  >  Sin evento
+data_merge <- data_merge %>%
+  mutate(
+    tipo_evento = case_when(
+      previous_myocardial_infarction == 1 ~ "Infarto",
+      coronary_heart_disease == 1         ~ "Coronaria",
+      angina_pectoris == 1                ~ "Angina",
+      mace_target == 0                    ~ "Sin evento",
+      TRUE                                ~ NA_character_
+    )
+  )
+
 # Definición del conjunto de variables que alimentarán los modelos
 vars_modelo <- c(
   # Identificador y dianas
-  "SEQN", "ami_target", "mace_target",
+  "SEQN", "ami_target", "mace_target", "tipo_evento",
   # Bloque 0: Demografía y nivel socioeconómico
   "age", "sex", "ethnicity_race", "income_poverty_ratio",
   # Bloque 1: Exploración clínica de consulta
