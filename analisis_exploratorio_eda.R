@@ -14,23 +14,15 @@ cat("\n=======================================================\n")
 cat("--- ANÁLISIS EXPLORATORIO DE DATOS ---\n")
 cat("=======================================================\n")
 
-# Cargar los datos procesados si no estuvieran en memoria
-if (!exists("data_model")) {
-  load("datos_procesados.RData")
-}
-
 # ------------------------------------------------------------------------------
 # 1. FIGURA EDA 1: Demostración formal de Skip Patterns y Calidad del Dato
 # ------------------------------------------------------------------------------
 cat("\n1. Generando gráfico de saneamiento y Skip Patterns...\n")
 
-dem_raw <- read.csv("../../Datos/demographic.csv")
-exam_raw <- read.csv("../../Datos/examination.csv")
-quest_raw <- read.csv("../../Datos/questionnaire.csv")
-
-raw_merge_all <- dem_raw %>%
-  inner_join(exam_raw, by = "SEQN") %>%
-  inner_join(quest_raw, by = "SEQN")
+# Reutilizar las tablas originales cargadas por preparacion_datos.R.
+raw_merge_all <- demographic_base %>%
+  inner_join(examination_base, by = "SEQN") %>%
+  inner_join(questionnaire_base, by = "SEQN")
 
 raw_merge_adults <- raw_merge_all %>% filter(RIDAGEYR >= 20)
 

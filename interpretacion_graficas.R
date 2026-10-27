@@ -21,12 +21,26 @@ cat("=======================================================\n")
 cat("\n1. Test ANOVA de Devianza (Likelihood Ratio Test):\n")
 print(anova(m0_mace, m1_mace, m2_mace, test = "Chisq"))
 
-cat("\n2. Test de DeLong (Diferencia estadística de AUC entre M1 y M2 en Test):\n")
-test_delong <- roc.test(roc_m1_mace, roc_m2_mace)
-print(test_delong)
-cat("P-valor de DeLong:", round(test_delong$p.value, 4), 
-    "-> La mejora de M2 sobre M1 es", 
-    ifelse(test_delong$p.value < 0.05, "estadísticamente significativa (p < 0.05)", "no significativa (p >= 0.05)"), ".\n")
+cat("\n2. Test de DeLong (M0 vs M2 en Test; comparación del incremento total):\n")
+test_delong_m0_m2 <- roc.test(roc_m0_mace, roc_m2_mace)
+print(test_delong_m0_m2)
+cat("Diferencia puntual de AUC (M2 - M0):",
+    sprintf("%.4f", auc_m2_mace - auc_m0_mace), "\n")
+cat("P-valor nominal de DeLong M0 vs M2 (sin ajuste por comparaciones múltiples):",
+    round(test_delong_m0_m2$p.value, 4),
+    "-> La diferencia es",
+    ifelse(test_delong_m0_m2$p.value < 0.05,
+           "nominalmente significativa (p < 0.05)",
+           "no significativa (p >= 0.05)"), ".\n")
+
+cat("\n3. Test de DeLong (M1 vs M2 en Test; contribución incremental de hábitos):\n")
+test_delong_m1_m2 <- roc.test(roc_m1_mace, roc_m2_mace)
+print(test_delong_m1_m2)
+cat("P-valor nominal de DeLong M1 vs M2:", round(test_delong_m1_m2$p.value, 4),
+    "-> La mejora de M2 sobre M1 es",
+    ifelse(test_delong_m1_m2$p.value < 0.05,
+           "nominalmente significativa (p < 0.05)",
+           "no significativa (p >= 0.05)"), ".\n")
 
 # ==============================================================================
 # GRÁFICAS ROC - MODELOS JERÁRQUICOS MACE
