@@ -6,6 +6,9 @@ if (!requireNamespace("ggplot2", quietly = TRUE)) {
   install.packages("ggplot2", repos = "https://cloud.r-project.org/")
 }
 library(ggplot2)
+library(pROC)
+library(dplyr)
+library(randomForest)
 
 # ==============================================================================
 # CONTRASTES ESTADÍSTICOS FORMALES (Diana MACE)
@@ -97,7 +100,7 @@ cat("--- EJE 2: COMPARATIVA DE DIANAS (ami_target vs MACE) ---\n")
 cat("=======================================================\n")
 
 cat("\n--- DISCRIMINACIÓN EN TEST ---\n")
-cat("AUC M2 jerárquico (MACE):      ", sprintf("%.3f", auc_m2_mace), "\n")
+cat("AUC M2 jerárquico (MACE):       ", sprintf("%.3f", auc_m2_mace), "\n")
 cat("AUC modelo directo (ami_target): ", sprintf("%.3f", auc_ami), "\n")
 
 # Gráfica Comparativa
@@ -153,10 +156,10 @@ ggsave("curva_roc_mace_vs_infarto.png", plot = p_dianas, width = 7.5, height = 6
 cat("Gráfico comparativo exportado correctamente a 'curva_roc_mace_vs_infarto.png'.\n")
 
 # ==============================================================================
-# FOREST PLOT - ODDS RATIOS (Infarto Aislado - ami_target)
+# FOREST PLOT - ODDS RATIOS (Diana MACE)
 # ==============================================================================
 
-cat("\n--- Generando Forest Plot de Odds Ratios (Infarto Aislado) ---\n")
+cat("\n--- Generando Forest Plot de Odds Ratios (Diana MACE) ---\n")
 
 or_mace <- exp(cbind(OR = coef(m2_mace), confint.default(m2_mace)))
 cat("\n--- ODDS RATIOS (OR) E INTERVALOS DE CONFIANZA 95% (MACE) ---\n")
@@ -170,25 +173,30 @@ df_forest <- or_data %>%
   filter(Variable != "(Intercept)") %>%
   mutate(
     Nombre = case_when(
-      Variable == "age" ~ "Edad (por cada año)",
-      Variable == "sexMale" ~ "Sexo Masculino",
-      Variable == "family_history_mi_under_50" ~ "Historial Familiar Cardíaco (<50 años)",
-      Variable == "sleep_disorder_insomnia" ~ "Insomnio / Trastorno del Sueño",
-      Variable == "cumulative_smoking_100_tabacco" ~ "Fumador Histórico (>= 100 cig)",
-      Variable == "income_poverty_ratio" ~ "Nivel Socioeconómico (Ratio Pobreza)",
-      Variable == "waist_circumference" ~ "Perímetro de Cintura (cm)",
-      Variable == "body_mass_index" ~ "Índice de Masa Corporal (IMC)",
-      Variable == "daily_sedentary_hours" ~ "Horas de Sedentarismo al Día",
-      Variable == "weekly_vigorous_physical_activity" ~ "Actividad Física Vigorosa Semanal",
-      Variable == "systolic_average" ~ "Tensión Arterial Sistólica Media",
-      Variable == "diastolic_average" ~ "Tensión Arterial Diastólica Media",
-      Variable == "resting_heart_rate" ~ "Pulso en Reposo",
+      Variable == "age"                                                 ~ "Edad (por cada año)",
+      Variable == "sexMale"                                             ~ "Sexo Masculino",
+      Variable == "family_history_mi_under_50"                           ~ "Historial Familiar Cardíaco (<50 años)",
+      Variable == "sleep_disorder_insomnia"                             ~ "Insomnio / Trastorno del Sueño",
+      Variable == "cumulative_smoking_100_tabacco"                      ~ "Fumador Histórico (>= 100 cig)",
+      Variable == "income_poverty_ratio"                                ~ "Nivel Socioeconómico (Ratio Pobreza)",
+      Variable == "waist_circumference"                                 ~ "Perímetro de Cintura (cm)",
+      Variable == "body_mass_index"                                     ~ "Índice de Masa Corporal (IMC)",
+      Variable == "daily_sedentary_hours"                               ~ "Horas de Sedentarismo al Día",
+      Variable == "weekly_vigorous_physical_activity"                   ~ "Actividad Física Vigorosa Semanal",
+      Variable == "systolic_average"                                    ~ "Tensión Arterial Sistólica Media",
+      Variable == "diastolic_average"                                   ~ "Tensión Arterial Diastólica Media",
+      Variable == "resting_heart_rate"                                  ~ "Pulso en Reposo",
+      Variable == "ethnicity_raceNon-Hispanic White"                    ~ "Etnia: Blanco no hispano",
+      Variable == "ethnicity_raceOther Hispanic"                        ~ "Etnia: Otro hispano",
+      Variable == "ethnicity_raceNon-Hispanic Asian"                    ~ "Etnia: Asiático no hispano",
+      Variable == "ethnicity_raceNon-Hispanic Black"                    ~ "Etnia: Negro no hispano",
+      Variable == "ethnicity_raceOther Race - Including Multi-Racial"   ~ "Etnia: Multirracial / Otra",
       TRUE ~ Variable
     ),
     Significativo = case_when(
       Lower_CI > 1.0 ~ "Factor de Riesgo Significativo (p < 0.05)",
       Upper_CI < 1.0 ~ "Factor Protector Significativo (p < 0.05)",
-      TRUE ~ "No Significativo (IC cruza el 1.0)"
+      TRUE           ~ "No Significativo (IC cruza el 1.0)"
     )
   )
 
@@ -208,24 +216,25 @@ p_forest <- ggplot(df_forest, aes(x = OR, y = Nombre, color = Significativo)) +
     breaks = c(0.5, 0.8, 1.0, 1.5, 2.0, 3.0),
     labels = c("0.5", "0.8", "1.0", "1.5", "2.0", "3.0")
   ) +
+  guides(color = guide_legend(nrow = 2, byrow = TRUE)) +
   theme_minimal(base_size = 12) +
   theme(
     plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
     plot.subtitle = element_text(size = 10.5, color = "gray30", hjust = 0.5, margin = margin(b = 10)),
     legend.position = "bottom",
     legend.title = element_blank(),
-    legend.text = element_text(size = 9.5, face = "bold"),
+    legend.text = element_text(size = 9.0, face = "bold"),
     axis.title.y = element_blank(),
     panel.grid.minor = element_blank(),
     panel.border = element_rect(color = "gray75", fill = NA, linewidth = 0.8)
   ) +
   labs(
     title = "Impacto Clínico de Factores y Hábitos\nsobre el Riesgo Cardiovascular (MACE)",
-    subtitle = "Odds Ratios ajustados por edad, clínica y entorno socioeconómico (NHANES)",
+    subtitle = "Odds Ratios ajustados por edad, clínica y entorno socioeconómico (NHANES)"
   )
 
 ggsave("forest_plot_riesgo_mace.png", plot = p_forest, width = 9.0, height = 7.0, dpi = 150)
-cat("Forest Plot exportado correctamente a 'forest_plot_riesgo_ami.png'.\n")
+cat("Forest Plot exportado correctamente a 'forest_plot_riesgo_mace.png'.\n")
 
 # ==============================================================================
 # RANDOM FOREST - IMPORTANCIA DE VARIABLES Y CURVA DEPENDENCIA PARCIAL
@@ -235,11 +244,11 @@ cat("\n=======================================================\n")
 cat("--- INTERPRETACIÓN RANDOM FOREST (MACE) ---\n")
 cat("=======================================================\n")
 
-# Importancia de variables
+# Importancia de variables por Permutación (específica para la clase positiva "Yes")
 imp_mat <- importance(rf_model)
 df_imp <- data.frame(
   Variable = rownames(imp_mat),
-  Gini     = imp_mat[, "MeanDecreaseGini"]
+  Importance_Yes = imp_mat[, "Yes"]
 )
 
 friendly_names <- c(
@@ -260,11 +269,11 @@ friendly_names <- c(
 )
 
 df_imp$Nombre <- ifelse(df_imp$Variable %in% names(friendly_names), friendly_names[df_imp$Variable], df_imp$Variable)
-df_imp$Nombre <- factor(df_imp$Nombre, levels = df_imp$Nombre[order(df_imp$Gini)])
+df_imp$Nombre <- factor(df_imp$Nombre, levels = df_imp$Nombre[order(df_imp$Importance_Yes)])
 
-p_imp <- ggplot(df_imp, aes(x = Gini, y = Nombre)) +
+p_imp <- ggplot(df_imp, aes(x = Importance_Yes, y = Nombre)) +
   geom_col(fill = "#2b5c8f", width = 0.65) +
-  geom_text(aes(label = sprintf("%.1f", Gini)), hjust = -0.15, size = 3.5, fontface = "bold", color = "gray25") +
+  geom_text(aes(label = sprintf("%.1f", Importance_Yes)), hjust = -0.15, size = 3.5, fontface = "bold", color = "gray25") +
   scale_x_continuous(expand = expansion(mult = c(0, 0.12))) +
   theme_minimal(base_size = 12) +
   theme(
@@ -275,9 +284,9 @@ p_imp <- ggplot(df_imp, aes(x = Gini, y = Nombre)) +
     panel.border = element_rect(color = "gray75", fill = NA, linewidth = 0.8)
   ) +
   labs(
-    title = "Ranking de Importancia de Variables (Random Forest)",
-    subtitle = "Relevancia predictiva global para el evento cardiovascular MACE (Mean Decrease Gini)",
-    x = "Importancia (Disminución Media de Impureza Gini)"
+    title = "Ranking de Importancia por Permutación (Random Forest)",
+    subtitle = "Impacto predictivo directo sobre la detección de casos MACE (Permutation Importance - Clase 'Yes')",
+    x = "Importancia (Disminución de Precisión al Permutar en Clase 'Yes')"
   )
 
 ggsave("importancia_variables_rf.png", plot = p_imp, width = 8.5, height = 6.0, dpi = 150)
@@ -292,14 +301,18 @@ df_partial <- data.frame(
   efecto = p_partial$y
 ) %>% filter(horas <= 16)
 
+min_efecto <- min(df_partial$efecto)
+rango_efecto <- diff(range(df_partial$efecto))
+
 p_sed <- ggplot(df_partial, aes(x = horas, y = efecto)) +
+  annotate("rect", xmin = 5, xmax = 16, ymin = -Inf, ymax = Inf, alpha = 0.08, fill = "#c0392b") +
+  annotate("text",
+    x = 5.3, y = min_efecto + 0.18 * rango_efecto,
+    label = "Zona de Riesgo Creciente:\nIncremento continuado a partir de ~5h/día",
+    hjust = 0, fontface = "bold", size = 3.6, color = "#962d00"
+  ) +
   geom_line(color = "#c0392b", linewidth = 1.3) +
   geom_point(color = "#c0392b", size = 2) +
-  geom_vline(xintercept = 8, linetype = "dashed", color = "gray40", linewidth = 0.9) +
-  annotate("text",
-    x = 8.3, y = min(df_partial$efecto) + 0.3 * diff(range(df_partial$efecto)),
-    label = "Umbral Crítico:\n> 8 horas/día", hjust = 0, fontface = "bold", color = "#c0392b"
-  ) +
   scale_x_continuous(breaks = seq(0, 16, 2)) +
   theme_minimal(base_size = 12) +
   theme(
@@ -309,14 +322,14 @@ p_sed <- ggplot(df_partial, aes(x = horas, y = efecto)) +
     panel.border = element_rect(color = "gray75", fill = NA, linewidth = 0.8)
   ) +
   labs(
-    title = "Efecto Umbral del Sedentarismo Diario sobre el Riesgo Cardiovascular",
+    title = "Efecto Marginal del Sedentarismo Diario sobre el Riesgo Cardiovascular",
     subtitle = "Curva de Dependencia Parcial (Partial Dependence) de Random Forest sobre MACE",
     x = "Horas Diarias de Sedentarismo (PAD680)",
-    y = "Efecto Marginal sobre el Riesgo (Log-Odds)"
+    y = "Efecto Marginal Centrado (1/2 Log-Odds)"
   )
 
 ggsave("curva_sedentarismo_partialplot.png", plot = p_sed, width = 8.0, height = 5.5, dpi = 150)
-cat("Gráfico de Umbral de Sedentarismo exportado a 'curva_sedentarismo_partialplot.png'.\n")
+cat("Gráfico de Sedentarismo exportado a 'curva_sedentarismo_partialplot.png'.\n")
 
 
 # ==============================================================================
@@ -480,7 +493,7 @@ p_isocost <- ggplot(df_roc_m2_curve, aes(x = fpr, y = tpr)) +
     hjust = 0, fontface = "bold", size = 3.6, color = "#962d00"
   ) +
   annotate("text",
-    x = 0.52, y = 0.96,
+    x = 0.55, y = 0.82,
     label = paste0("Recta de Iso-Coste (m = ", round(m_iso, 2), ")\nMatriz de Costes: C(FN)/C(FP) = 10"),
     hjust = 0, fontface = "italic", size = 3.4, color = "#d35400"
   ) +
