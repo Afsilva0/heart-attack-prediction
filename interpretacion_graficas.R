@@ -94,8 +94,8 @@ p_roc_v2 <- ggplot(df_roc_all, aes(x = fpr, y = tpr, color = modelo)) +
   ) +
   theme_minimal(base_size = 13) +
   theme(
-    plot.title = element_text(face = "bold", size = 15, hjust = 0.5, margin = margin(b = 6)),
-    plot.subtitle = element_text(size = 11, color = "gray30", hjust = 0.5, margin = margin(b = 12)),
+    plot.title = element_text(face = "bold", size = 15, hjust = 0.5, margin = ggplot2::margin(b = 6)),
+    plot.subtitle = element_text(size = 11, color = "gray30", hjust = 0.5, margin = ggplot2::margin(b = 12)),
     legend.position = c(0.68, 0.22),
     legend.background = element_rect(fill = alpha("white", 0.92), color = "gray80", linewidth = 0.5),
     legend.title = element_blank(),
@@ -158,8 +158,8 @@ p_dianas <- ggplot(df_comparativa_dianas, aes(x = fpr, y = tpr, color = diana)) 
   ) +
   theme_minimal(base_size = 13) +
   theme(
-    plot.title = element_text(face = "bold", size = 15, hjust = 0.5, margin = margin(b = 6)),
-    plot.subtitle = element_text(size = 11, color = "gray30", hjust = 0.5, margin = margin(b = 12)),
+    plot.title = element_text(face = "bold", size = 15, hjust = 0.5, margin = ggplot2::margin(b = 6)),
+    plot.subtitle = element_text(size = 11, color = "gray30", hjust = 0.5, margin = ggplot2::margin(b = 12)),
     legend.position = c(0.68, 0.22),
     legend.background = element_rect(fill = alpha("white", 0.92), color = "gray80", linewidth = 0.5),
     legend.title = element_blank(),
@@ -241,7 +241,7 @@ p_forest <- ggplot(df_forest, aes(x = OR, y = Nombre, color = Significativo)) +
   theme_minimal(base_size = 12) +
   theme(
     plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
-    plot.subtitle = element_text(size = 10.5, color = "gray30", hjust = 0.5, margin = margin(b = 10)),
+    plot.subtitle = element_text(size = 10.5, color = "gray30", hjust = 0.5, margin = ggplot2::margin(b = 10)),
     legend.position = "bottom",
     legend.title = element_blank(),
     legend.text = element_text(size = 9.0, face = "bold"),
@@ -441,8 +441,8 @@ p_fairness <- ggplot(df_roc_sexo, aes(x = fpr, y = tpr, color = sexo)) +
   ) +
   theme_minimal(base_size = 13) +
   theme(
-    plot.title = element_text(face = "bold", size = 15, hjust = 0.5, margin = margin(b = 6)),
-    plot.subtitle = element_text(size = 11, color = "gray30", hjust = 0.5, margin = margin(b = 12)),
+    plot.title = element_text(face = "bold", size = 15, hjust = 0.5, margin = ggplot2::margin(b = 6)),
+    plot.subtitle = element_text(size = 11, color = "gray30", hjust = 0.5, margin = ggplot2::margin(b = 12)),
     legend.position = c(0.68, 0.22),
     legend.background = element_rect(fill = alpha("white", 0.92), color = "gray80", linewidth = 0.5),
     legend.title = element_blank(),
@@ -531,8 +531,8 @@ p_isocost <- ggplot(df_roc_m2_curve, aes(x = fpr, y = tpr)) +
   ) +
   theme_minimal(base_size = 13) +
   theme(
-    plot.title = element_text(face = "bold", size = 15, hjust = 0.5, margin = margin(b = 6)),
-    plot.subtitle = element_text(size = 11, color = "gray30", hjust = 0.5, margin = margin(b = 12)),
+    plot.title = element_text(face = "bold", size = 15, hjust = 0.5, margin = ggplot2::margin(b = 6)),
+    plot.subtitle = element_text(size = 11, color = "gray30", hjust = 0.5, margin = ggplot2::margin(b = 12)),
     panel.grid.minor = element_blank(),
     panel.border = element_rect(color = "gray75", fill = NA, linewidth = 0.8)
   ) +

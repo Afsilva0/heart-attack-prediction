@@ -5,6 +5,9 @@ cat("=======================================================\n")
 cat("\n Ejecutando preparacion_datos.R ...\n")
 source("preparacion_datos.R")
 
+cat("\n Ejecutando analisis_exploratorio_eda.R ...\n")
+source("analisis_exploratorio_eda.R")
+
 cat("\n Ejecutando modelos.R ...\n")
 source("modelos.R")
 
