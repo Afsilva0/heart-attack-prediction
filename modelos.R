@@ -312,6 +312,8 @@ save(
   roc_m0_mace, roc_m1_mace, roc_m2_mace, roc_rf_mace, roc_ami,
   auc_m0_mace, auc_m1_mace, auc_m2_mace, auc_rf_mace, auc_ami,
   tabla_metricas_test,
+  th_m0, th_m1, th_m2, th_rf,
+  train_data, test_data,
   m_tipo, estratificacion_test, tabla_niveles_riesgo,
   cortes_riesgo, niveles_riesgo, acciones_nivel,
   auc_tipo_multiclase, auc_tipo_ovr, auc_prob_infarto,

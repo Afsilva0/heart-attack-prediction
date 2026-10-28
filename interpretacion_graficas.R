@@ -24,23 +24,31 @@ print(anova(m0_mace, m1_mace, m2_mace, test = "Chisq"))
 cat("\n2. Test de DeLong (M0 vs M2 en Test; comparación del incremento total):\n")
 test_delong_m0_m2 <- roc.test(roc_m0_mace, roc_m2_mace)
 print(test_delong_m0_m2)
-cat("Diferencia puntual de AUC (M2 - M0):",
-    sprintf("%.4f", auc_m2_mace - auc_m0_mace), "\n")
-cat("P-valor nominal de DeLong M0 vs M2 (sin ajuste por comparaciones múltiples):",
-    round(test_delong_m0_m2$p.value, 4),
-    "-> La diferencia es",
-    ifelse(test_delong_m0_m2$p.value < 0.05,
-           "nominalmente significativa (p < 0.05)",
-           "no significativa (p >= 0.05)"), ".\n")
+cat(
+  "Diferencia puntual de AUC (M2 - M0):",
+  sprintf("%.4f", auc_m2_mace - auc_m0_mace), "\n"
+)
+cat(
+  "P-valor nominal de DeLong M0 vs M2 (sin ajuste por comparaciones múltiples):",
+  round(test_delong_m0_m2$p.value, 4),
+  "-> La diferencia es",
+  ifelse(test_delong_m0_m2$p.value < 0.05,
+    "nominalmente significativa (p < 0.05)",
+    "no significativa (p >= 0.05)"
+  ), ".\n"
+)
 
 cat("\n3. Test de DeLong (M1 vs M2 en Test; contribución incremental de hábitos):\n")
 test_delong_m1_m2 <- roc.test(roc_m1_mace, roc_m2_mace)
 print(test_delong_m1_m2)
-cat("P-valor nominal de DeLong M1 vs M2:", round(test_delong_m1_m2$p.value, 4),
-    "-> La mejora de M2 sobre M1 es",
-    ifelse(test_delong_m1_m2$p.value < 0.05,
-           "nominalmente significativa (p < 0.05)",
-           "no significativa (p >= 0.05)"), ".\n")
+cat(
+  "P-valor nominal de DeLong M1 vs M2:", round(test_delong_m1_m2$p.value, 4),
+  "-> La mejora de M2 sobre M1 es",
+  ifelse(test_delong_m1_m2$p.value < 0.05,
+    "nominalmente significativa (p < 0.05)",
+    "no significativa (p >= 0.05)"
+  ), ".\n"
+)
 
 # ==============================================================================
 # GRÁFICAS ROC - MODELOS JERÁRQUICOS MACE
@@ -51,22 +59,25 @@ cat("\n--- Generando gráficas ROC (Modelos Jerárquicos MACE) ---\n")
 # Versión Base R
 png("curvas_roc_modelos.png", width = 800, height = 700, res = 120)
 
-plot(roc_m0_mace, col = "#2b5c8f", lwd = 2.5, 
-     main = "Comparativa de Modelos Jerárquicos (Curvas ROC en Test - Diana MACE)",
-     xlab = "Especificidad", ylab = "Sensibilidad",
-     legacy.axes = TRUE)
+plot(roc_m0_mace,
+  col = "#2b5c8f", lwd = 2.5,
+  main = "Comparativa de Modelos Jerárquicos (Curvas ROC en Test - Diana MACE)",
+  xlab = "Especificidad", ylab = "Sensibilidad",
+  legacy.axes = TRUE
+)
 plot(roc_m1_mace, col = "#c0392b", lwd = 2.5, add = TRUE)
 plot(roc_m2_mace, col = "#27ae60", lwd = 2.5, add = TRUE)
 abline(a = 0, b = 1, lty = 2, col = "grey50")
 
-legend("bottomright", 
-       legend = c(
-         paste0("M0: Demografía (AUC = ", sprintf("%.3f", auc_m0_mace), ")"),
-         paste0("M1: Clínicos (AUC = ", sprintf("%.3f", auc_m1_mace), ")"),
-         paste0("M2: Hábitos / Integral (AUC = ", sprintf("%.3f", auc_m2_mace), ")")
-       ),
-       col = c("#2b5c8f", "#c0392b", "#27ae60"), 
-       lwd = 2.5, bty = "o", bg = "white")
+legend("bottomright",
+  legend = c(
+    paste0("M0: Demografía (AUC = ", sprintf("%.3f", auc_m0_mace), ")"),
+    paste0("M1: Clínicos (AUC = ", sprintf("%.3f", auc_m1_mace), ")"),
+    paste0("M2: Hábitos / Integral (AUC = ", sprintf("%.3f", auc_m2_mace), ")")
+  ),
+  col = c("#2b5c8f", "#c0392b", "#27ae60"),
+  lwd = 2.5, bty = "o", bg = "white"
+)
 
 dev.off()
 cat("Gráfico exportado correctamente a 'curvas_roc_modelos.png'.\n")
@@ -208,30 +219,30 @@ df_forest <- or_data %>%
   filter(Variable != "(Intercept)") %>%
   mutate(
     Nombre = case_when(
-      Variable == "age"                                                 ~ "Edad (por cada año)",
-      Variable == "sexMale"                                             ~ "Sexo Masculino",
-      Variable == "family_history_mi_under_50"                           ~ "Historial Familiar Cardíaco (<50 años)",
-      Variable == "sleep_disorder_insomnia"                             ~ "Insomnio / Trastorno del Sueño",
-      Variable == "cumulative_smoking_100_tabacco"                      ~ "Fumador Histórico (>= 100 cig)",
-      Variable == "income_poverty_ratio"                                ~ "Nivel Socioeconómico (Ratio Pobreza)",
-      Variable == "waist_circumference"                                 ~ "Perímetro de Cintura (cm)",
-      Variable == "body_mass_index"                                     ~ "Índice de Masa Corporal (IMC)",
-      Variable == "daily_sedentary_hours"                               ~ "Horas de Sedentarismo al Día",
-      Variable == "weekly_vigorous_physical_activity"                   ~ "Actividad Física Vigorosa Semanal",
-      Variable == "systolic_average"                                    ~ "Tensión Arterial Sistólica Media",
-      Variable == "diastolic_average"                                   ~ "Tensión Arterial Diastólica Media",
-      Variable == "resting_heart_rate"                                  ~ "Pulso en Reposo",
-      Variable == "ethnicity_raceNon-Hispanic White"                    ~ "Etnia: Blanco no hispano",
-      Variable == "ethnicity_raceOther Hispanic"                        ~ "Etnia: Otro hispano",
-      Variable == "ethnicity_raceNon-Hispanic Asian"                    ~ "Etnia: Asiático no hispano",
-      Variable == "ethnicity_raceNon-Hispanic Black"                    ~ "Etnia: Negro no hispano",
-      Variable == "ethnicity_raceOther Race - Including Multi-Racial"   ~ "Etnia: Multirracial / Otra",
+      Variable == "age" ~ "Edad (por cada año)",
+      Variable == "sexMale" ~ "Sexo Masculino",
+      Variable == "family_history_mi_under_50" ~ "Historial Familiar Cardíaco (<50 años)",
+      Variable == "sleep_disorder_insomnia" ~ "Insomnio / Trastorno del Sueño",
+      Variable == "cumulative_smoking_100_tabacco" ~ "Fumador Histórico (>= 100 cig)",
+      Variable == "income_poverty_ratio" ~ "Nivel Socioeconómico (Ratio Pobreza)",
+      Variable == "waist_circumference" ~ "Perímetro de Cintura (cm)",
+      Variable == "body_mass_index" ~ "Índice de Masa Corporal (IMC)",
+      Variable == "daily_sedentary_hours" ~ "Horas de Sedentarismo al Día",
+      Variable == "weekly_vigorous_physical_activity" ~ "Actividad Física Vigorosa Semanal",
+      Variable == "systolic_average" ~ "Tensión Arterial Sistólica Media",
+      Variable == "diastolic_average" ~ "Tensión Arterial Diastólica Media",
+      Variable == "resting_heart_rate" ~ "Pulso en Reposo",
+      Variable == "ethnicity_raceNon-Hispanic White" ~ "Etnia: Blanco no hispano",
+      Variable == "ethnicity_raceOther Hispanic" ~ "Etnia: Otro hispano",
+      Variable == "ethnicity_raceNon-Hispanic Asian" ~ "Etnia: Asiático no hispano",
+      Variable == "ethnicity_raceNon-Hispanic Black" ~ "Etnia: Negro no hispano",
+      Variable == "ethnicity_raceOther Race - Including Multi-Racial" ~ "Etnia: Multirracial / Otra",
       TRUE ~ Variable
     ),
     Significativo = case_when(
       Lower_CI > 1.0 ~ "Factor de Riesgo Significativo (p < 0.05)",
       Upper_CI < 1.0 ~ "Factor Protector Significativo (p < 0.05)",
-      TRUE           ~ "No Significativo (IC cruza el 1.0)"
+      TRUE ~ "No Significativo (IC cruza el 1.0)"
     )
   )
 
@@ -243,8 +254,8 @@ p_forest <- ggplot(df_forest, aes(x = OR, y = Nombre, color = Significativo)) +
   geom_point(size = 3.2) +
   scale_color_manual(values = c(
     "Factor de Riesgo Significativo (p < 0.05)" = "#d9534f",
-    "Factor Protector Significativo (p < 0.05)"  = "#2b5c8f",
-    "No Significativo (IC cruza el 1.0)"        = "gray60"
+    "Factor Protector Significativo (p < 0.05)" = "#2b5c8f",
+    "No Significativo (IC cruza el 1.0)" = "gray60"
   )) +
   scale_x_log10(
     name = "Odds Ratio (Escala Logarítmica - IC 95%)",
@@ -312,11 +323,11 @@ p_imp <- ggplot(df_imp, aes(x = Importance_Yes, y = Nombre)) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.12))) +
   theme_minimal(base_size = 12) +
   theme(
-    plot.title    = element_text(face = "bold", size = 14, hjust = 0.5),
+    plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
     plot.subtitle = element_text(size = 10.5, color = "gray30", hjust = 0.5, margin = ggplot2::margin(b = 10)),
-    axis.title.y  = element_blank(),
+    axis.title.y = element_blank(),
     panel.grid.minor = element_blank(),
-    panel.border  = element_rect(color = "gray75", fill = NA, linewidth = 0.8)
+    panel.border = element_rect(color = "gray75", fill = NA, linewidth = 0.8)
   ) +
   labs(
     title = "Ranking de Importancia por Permutación (Random Forest)",
@@ -351,10 +362,10 @@ p_sed <- ggplot(df_partial, aes(x = horas, y = efecto)) +
   scale_x_continuous(breaks = seq(0, 16, 2)) +
   theme_minimal(base_size = 12) +
   theme(
-    plot.title    = element_text(face = "bold", size = 14, hjust = 0.5),
+    plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
     plot.subtitle = element_text(size = 10.5, color = "gray30", hjust = 0.5, margin = ggplot2::margin(b = 10)),
     panel.grid.minor = element_blank(),
-    panel.border  = element_rect(color = "gray75", fill = NA, linewidth = 0.8)
+    panel.border = element_rect(color = "gray75", fill = NA, linewidth = 0.8)
   ) +
   labs(
     title = "Efecto Marginal del Sedentarismo Diario sobre el Riesgo Cardiovascular",
@@ -380,22 +391,24 @@ df_test_fairness$prob <- prob_m2_mace
 
 # Curvas ROC desagregadas
 roc_female <- roc(df_test_fairness$mace_target[df_test_fairness$sex == "Female"],
-                  df_test_fairness$prob[df_test_fairness$sex == "Female"],
-                  quiet = TRUE
+  df_test_fairness$prob[df_test_fairness$sex == "Female"],
+  quiet = TRUE
 )
 roc_male <- roc(df_test_fairness$mace_target[df_test_fairness$sex == "Male"],
-                df_test_fairness$prob[df_test_fairness$sex == "Male"],
-                quiet = TRUE
+  df_test_fairness$prob[df_test_fairness$sex == "Male"],
+  quiet = TRUE
 )
 
 auc_female <- as.numeric(auc(roc_female))
 auc_male <- as.numeric(auc(roc_male))
 
-# Umbral clínico balanceado general (Youden)
-coords_youden <- coords(roc_m2_mace, "best", best.method = "closest.topleft")
-th_opt <- coords_youden$threshold[1]
+# Umbral clínico balanceado fijado en TRAIN (closest.topleft en fitted(m2_mace) para evitar data leakage):
+if (!exists("th_m2")) {
+  th_m2 <- coords(roc(train_data$mace_target, fitted(m2_mace), quiet = TRUE), "best", best.method = "closest.topleft")$threshold[1]
+}
+th_opt <- th_m2
 
-# Métricas por subgrupo
+# Métricas por subgrupo evaluadas en Test con el umbral fijado en Train
 df_test_fairness$pred_opt <- ifelse(df_test_fairness$prob >= th_opt, 1, 0)
 
 by_sex <- split(df_test_fairness, df_test_fairness$sex)
@@ -407,7 +420,7 @@ fairness_summary <- do.call(rbind, lapply(names(by_sex), function(s) {
   fn <- sum(sub$mace_target == 1 & sub$pred_opt == 0)
   fp <- sum(sub$mace_target == 0 & sub$pred_opt == 1)
   tn <- sum(sub$mace_target == 0 & sub$pred_opt == 0)
-  
+
   data.frame(
     Grupo = ifelse(s == "Female", "Mujeres", "Hombres"),
     N_Total = n_total,
@@ -420,7 +433,7 @@ fairness_summary <- do.call(rbind, lapply(names(by_sex), function(s) {
   )
 }))
 
-cat("\n--- TABLA DE EQUIDAD Y DISPARIDAD DE GÉNERO (Umbral Youden =", round(th_opt, 3), ") ---\n")
+cat("\n--- TABLA DE EQUIDAD Y DISPARIDAD DE GÉNERO (Umbral Train [closest.topleft] =", round(th_opt, 3), ") ---\n")
 print(fairness_summary)
 
 # Gráfico comparativo de Curvas ROC por Género (ggplot2)
@@ -481,31 +494,39 @@ cat("=======================================================\n")
 # Un Falso Negativo (enfermo no detectado) se penaliza 10 veces más que un Falso Positivo (falsa alarma)
 coste_fp <- 1
 coste_fn <- 10
+
+# 1. Calibración del umbral óptimo ESTRICTAMENTE en TRAIN
+prev_train <- mean(train_data$mace_target == 1)
+m_iso <- ((1 - prev_train) / prev_train) * (coste_fp / coste_fn)
+
+roc_train_m2 <- roc(train_data$mace_target, fitted(m2_mace), quiet = TRUE)
+coords_train_coste <- coords(roc_train_m2, "all", ret = c("threshold", "specificity", "sensitivity"))
+coords_train_coste$coste_esperado <- (1 - prev_train) * coste_fp * (1 - coords_train_coste$specificity) +
+  prev_train * coste_fn * (1 - coords_train_coste$sensitivity)
+
+idx_opt_coste <- which.min(coords_train_coste$coste_esperado)
+opt_coste_train <- coords_train_coste[idx_opt_coste, ]
+th_opt_coste <- opt_coste_train$threshold
+
+# 2. Evaluación independiente en TEST usando el umbral fijado en Train
+coords_test_coste <- coords(roc_m2_mace, x = th_opt_coste, input = "threshold", ret = c("threshold", "specificity", "sensitivity"))
 prev_test <- mean(test_data$mace_target == 1)
+coste_esperado_test <- (1 - prev_test) * coste_fp * (1 - coords_test_coste$specificity) +
+  prev_test * coste_fn * (1 - coords_test_coste$sensitivity)
 
-# Pendiente matemática de la recta de Iso-Coste
-m_iso <- ((1 - prev_test) / prev_test) * (coste_fp / coste_fn)
-
-# Búsqueda de corte óptimo en todas las coordenadas ROC
-coords_mace <- coords(roc_m2_mace, "all", ret = c("threshold", "specificity", "sensitivity"))
-coords_mace$coste_esperado <- (1 - prev_test) * coste_fp * (1 - coords_mace$specificity) +
-  prev_test * coste_fn * (1 - coords_mace$sensitivity)
-
-idx_opt_coste <- which.min(coords_mace$coste_esperado)
-opt_coste <- coords_mace[idx_opt_coste, ]
-
-th_opt_coste <- opt_coste$threshold
-x_opt <- 1 - opt_coste$specificity
-y_opt <- opt_coste$sensitivity
+x_opt <- 1 - coords_test_coste$specificity
+y_opt <- coords_test_coste$sensitivity
 b_iso <- y_opt - m_iso * x_opt
 
+cat("Prevalencia MACE en Train:       ", round(prev_train * 100, 2), "%\n")
 cat("Prevalencia MACE en Test:        ", round(prev_test * 100, 2), "%\n")
 cat("Costes relativos:                 C(FP) =", coste_fp, "| C(FN) =", coste_fn, "\n")
 cat("Pendiente Recta Iso-Coste (m):   ", round(m_iso, 4), "\n")
-cat("Umbral Óptimo Sensible al Coste: ", round(th_opt_coste, 4), "(frente al 0.5 por defecto)\n")
-cat("  -> Sensibilidad conseguida:    ", round(y_opt * 100, 1), "%\n")
-cat("  -> Especificidad conseguida:   ", round(opt_coste$specificity * 100, 1), "%\n")
-cat("  -> Coste esperado mínimo:      ", round(opt_coste$coste_esperado, 4), "\n")
+cat("Umbral Óptimo fijado en Train:   ", round(th_opt_coste, 4), "(frente al 0.5 por defecto)\n")
+cat("Evaluación independiente en Test:\n")
+cat("  -> Sensibilidad en Test:       ", round(y_opt * 100, 1), "%\n")
+cat("  -> Especificidad en Test:      ", round(coords_test_coste$specificity * 100, 1), "%\n")
+cat("  -> Coste esperado en Test:     ", round(coste_esperado_test, 4), "\n")
 
 # Gráfica de la Curva ROC con la Recta de Iso-Coste tangente
 df_roc_m2_curve <- data.frame(
@@ -519,12 +540,12 @@ p_isocost <- ggplot(df_roc_m2_curve, aes(x = fpr, y = tpr)) +
   geom_abline(intercept = b_iso, slope = m_iso, color = "#d35400", linetype = "longdash", linewidth = 1.1) +
   annotate("point", x = x_opt, y = y_opt, color = "#d35400", size = 4.2) +
   annotate("text",
-           x = x_opt + 0.04, y = y_opt - 0.06,
-           label = paste0(
-             "Punto Óptimo Tangente\nUmbral = ", round(th_opt_coste, 3),
-             "\nSens = ", round(y_opt * 100, 1), "%\nEspec = ", round(opt_coste$specificity * 100, 1), "%"
-           ),
-           hjust = 0, fontface = "bold", size = 3.6, color = "#962d00"
+    x = x_opt + 0.04, y = y_opt - 0.06,
+    label = paste0(
+      "Punto de Evaluación en Test\nUmbral (Train) = ", round(th_opt_coste, 3),
+      "\nSens Test = ", round(y_opt * 100, 1), "%\nEspec Test = ", round(coords_test_coste$specificity * 100, 1), "%"
+    ),
+    hjust = 0, fontface = "bold", size = 3.6, color = "#962d00"
   ) +
   annotate("text",
     x = 0.55, y = 0.82,
@@ -572,10 +593,11 @@ df_estrat_plot <- estratificacion_test %>%
   count(nivel_riesgo, tipo_evento, .drop = FALSE) %>%
   left_join(tabla_niveles_riesgo %>% select(nivel_riesgo, Pacientes), by = "nivel_riesgo") %>%
   mutate(
-    pct         = 100 * n / Pacientes,
+    pct = 100 * n / Pacientes,
     tipo_evento = factor(tipo_evento,
-                         levels = c("Angina", "Coronaria", "Infarto"),
-                         labels = c("Angina aislada", "Enfermedad coronaria (sin infarto)", "Infarto de miocardio"))
+      levels = c("Angina", "Coronaria", "Infarto"),
+      labels = c("Angina aislada", "Enfermedad coronaria (sin infarto)", "Infarto de miocardio")
+    )
   )
 
 df_etiquetas <- tabla_niveles_riesgo %>%
@@ -584,22 +606,32 @@ df_etiquetas <- tabla_niveles_riesgo %>%
 y_max_estrat <- max(c(df_etiquetas$Riesgo_Observado, df_etiquetas$Riesgo_Predicho)) * 1.30
 
 p_estrat <- ggplot() +
-  geom_col(data = df_estrat_plot, aes(x = nivel_riesgo, y = pct, fill = tipo_evento),
-           width = 0.62, color = "white", linewidth = 0.4) +
-  geom_point(data = tabla_niveles_riesgo, aes(x = nivel_riesgo, y = Riesgo_Predicho, shape = "Riesgo medio predicho por M2"),
-             size = 4, color = "black", fill = "gold") +
-  geom_text(data = df_etiquetas, aes(x = nivel_riesgo, y = pmax(Riesgo_Observado, Riesgo_Predicho), label = etiqueta),
-            vjust = -0.5, size = 3.6, fontface = "bold", color = "gray20", lineheight = 0.9) +
+  geom_col(
+    data = df_estrat_plot, aes(x = nivel_riesgo, y = pct, fill = tipo_evento),
+    width = 0.62, color = "white", linewidth = 0.4
+  ) +
+  geom_point(
+    data = tabla_niveles_riesgo, aes(x = nivel_riesgo, y = Riesgo_Predicho, shape = "Riesgo medio predicho por M2"),
+    size = 4, color = "black", fill = "gold"
+  ) +
+  geom_text(
+    data = df_etiquetas, aes(x = nivel_riesgo, y = pmax(Riesgo_Observado, Riesgo_Predicho), label = etiqueta),
+    vjust = -0.5, size = 3.6, fontface = "bold", color = "gray20", lineheight = 0.9
+  ) +
   scale_fill_manual(values = c(
     "Angina aislada"                     = "#f5b041",
     "Enfermedad coronaria (sin infarto)" = "#e67e22",
     "Infarto de miocardio"               = "#c0392b"
   )) +
   scale_shape_manual(values = c("Riesgo medio predicho por M2" = 23)) +
-  scale_y_continuous(name = "Pacientes con evento cardiovascular real (%)",
-                     limits = c(0, y_max_estrat), expand = c(0, 0)) +
-  scale_x_discrete(name = "Nivel de riesgo asignado por el modelo M2",
-                   labels = c("Bajo\n(< 5%)", "Moderado\n(5-10%)", "Alto\n(10-20%)", "Muy alto\n(>= 20%)")) +
+  scale_y_continuous(
+    name = "Pacientes con evento cardiovascular real (%)",
+    limits = c(0, y_max_estrat), expand = c(0, 0)
+  ) +
+  scale_x_discrete(
+    name = "Nivel de riesgo asignado por el modelo M2",
+    labels = c("Bajo\n(< 5%)", "Moderado\n(5-10%)", "Alto\n(10-20%)", "Muy alto\n(>= 20%)")
+  ) +
   guides(fill = guide_legend(order = 1, nrow = 1), shape = guide_legend(order = 2)) +
   theme_minimal(base_size = 12) +
   theme(
@@ -624,10 +656,14 @@ cat("Gráfico de estratificación exportado a 'estratificacion_riesgo_tipo_event
 # Fichas de ejemplo: el paciente "típico" (mediana de riesgo) de cada nivel
 ficha_paciente <- function(fila) {
   cat("\n------------------------------------------------------------\n")
-  cat(sprintf("Paciente SEQN %d | %s, %d años\n", fila$SEQN,
-              ifelse(fila$sex == "Female", "Mujer", "Hombre"), fila$age))
-  cat(sprintf("Riesgo cardiovascular global: %.1f%%  ->  NIVEL %s\n",
-              100 * fila$prob_mace, toupper(as.character(fila$nivel_riesgo))))
+  cat(sprintf(
+    "Paciente SEQN %d | %s, %d años\n", fila$SEQN,
+    ifelse(fila$sex == "Female", "Mujer", "Hombre"), fila$age
+  ))
+  cat(sprintf(
+    "Riesgo cardiovascular global: %.1f%%  ->  NIVEL %s\n",
+    100 * fila$prob_mace, toupper(as.character(fila$nivel_riesgo))
+  ))
   cat("Desglose por tipo de evento:\n")
   cat(sprintf("   - Infarto de miocardio:            %.1f%%\n", 100 * fila$prob_infarto))
   cat(sprintf("   - Enfermedad coronaria (sin inf.): %.1f%%\n", 100 * fila$prob_coronaria))
