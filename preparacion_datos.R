@@ -150,6 +150,21 @@ data_merge <- data_merge %>%
     family_history_mi_under_50        = transform_nhanes_binary(family_history_mi_under_50)
   )
 
+## Estatus tabáquico en 3 niveles (estándar epidemiológico CDC / AHA):
+# - Nunca fumador: no ha fumado 100 cigarrillos en su vida (cumulative_smoking_100_tabacco == 0)
+# - Exfumador: fumó >= 100 cigarrillos pero actualmente ya no fuma nada (current_tobacco_use_frequency == 3)
+# - Fumador activo: fumó >= 100 cigarrillos y actualmente fuma a diario u ocasionalmente (current_tobacco_use_frequency in 1, 2)
+data_merge <- data_merge %>%
+  mutate(
+    smoking_status = case_when(
+      cumulative_smoking_100_tabacco == 0 ~ "Nunca fumador",
+      cumulative_smoking_100_tabacco == 1 & current_tobacco_use_frequency == 3 ~ "Exfumador",
+      cumulative_smoking_100_tabacco == 1 & current_tobacco_use_frequency %in% c(1, 2) ~ "Fumador activo",
+      TRUE ~ NA_character_
+    ),
+    smoking_status = factor(smoking_status, levels = c("Nunca fumador", "Exfumador", "Fumador activo"))
+  )
+
 ## Promedio de constantes clínicas (Presión arterial sistólica y diastólica)
 data_merge <- data_merge %>%
   mutate(
@@ -214,7 +229,7 @@ vars_modelo <- c(
   "systolic_average", "diastolic_average", "resting_heart_rate",
   "body_mass_index", "waist_circumference",
   # Bloque 2: Hábitos de vida y antecedentes
-  "cumulative_smoking_100_tabacco", "weekly_vigorous_physical_activity",
+  "smoking_status", "weekly_vigorous_physical_activity",
   "daily_sedentary_hours", "sleep_disorder_insomnia", "family_history_mi_under_50"
 )
 

@@ -44,7 +44,7 @@ m2_mace <- glm(
   mace_target ~ age + sex + ethnicity_race + income_poverty_ratio +
     systolic_average + diastolic_average + resting_heart_rate +
     body_mass_index + waist_circumference +
-    cumulative_smoking_100_tabacco + weekly_vigorous_physical_activity +
+    smoking_status + weekly_vigorous_physical_activity +
     daily_sedentary_hours + sleep_disorder_insomnia +
     family_history_mi_under_50,
   data = train_data,
@@ -59,7 +59,7 @@ m2_ami <- glm(
   ami_target ~ age + sex + ethnicity_race + income_poverty_ratio +
     systolic_average + diastolic_average + resting_heart_rate +
     body_mass_index + waist_circumference +
-    cumulative_smoking_100_tabacco + weekly_vigorous_physical_activity +
+    smoking_status + weekly_vigorous_physical_activity +
     daily_sedentary_hours + sleep_disorder_insomnia +
     family_history_mi_under_50,
   data = train_data,
@@ -75,7 +75,8 @@ train_rf <- as.data.frame(train_data) %>%
   mutate(
     mace_target    = factor(mace_target, levels = c(0, 1), labels = c("No", "Yes")),
     sex            = factor(sex),
-    ethnicity_race = factor(ethnicity_race)
+    ethnicity_race = factor(ethnicity_race),
+    smoking_status = factor(smoking_status)
   )
 
 # Número de casos positivos en entrenamiento para muestreo balanceado por árbol
@@ -87,7 +88,7 @@ rf_model <- randomForest(
   mace_target ~ age + sex + ethnicity_race + income_poverty_ratio +
     systolic_average + diastolic_average + resting_heart_rate +
     body_mass_index + waist_circumference +
-    cumulative_smoking_100_tabacco + weekly_vigorous_physical_activity +
+    smoking_status + weekly_vigorous_physical_activity +
     daily_sedentary_hours + sleep_disorder_insomnia +
     family_history_mi_under_50,
   data = train_rf,
@@ -123,7 +124,8 @@ test_rf <- as.data.frame(test_data) %>%
   mutate(
     mace_target    = factor(mace_target, levels = c(0, 1), labels = c("No", "Yes")),
     sex            = factor(sex, levels = levels(train_rf$sex)),
-    ethnicity_race = factor(ethnicity_race, levels = levels(train_rf$ethnicity_race))
+    ethnicity_race = factor(ethnicity_race, levels = levels(train_rf$ethnicity_race)),
+    smoking_status = factor(smoking_status, levels = levels(train_rf$smoking_status))
   )
 
 prob_rf_mace <- predict(rf_model, newdata = test_rf, type = "prob")[, "Yes"]
@@ -245,7 +247,7 @@ m_tipo_completo <- multinom(
   tipo_evento ~ age + sex + ethnicity_race + income_poverty_ratio +
     systolic_average + diastolic_average + resting_heart_rate +
     body_mass_index + waist_circumference +
-    cumulative_smoking_100_tabacco + weekly_vigorous_physical_activity +
+    smoking_status + weekly_vigorous_physical_activity +
     daily_sedentary_hours + sleep_disorder_insomnia +
     family_history_mi_under_50,
   data = train_pos, trace = FALSE

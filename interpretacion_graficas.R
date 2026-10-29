@@ -198,6 +198,8 @@ df_forest <- or_data %>%
       Variable == "sexMale" ~ "Sexo Masculino",
       Variable == "family_history_mi_under_50" ~ "Historial Familiar Cardíaco (<50 años)",
       Variable == "sleep_disorder_insomnia" ~ "Insomnio / Trastorno del Sueño",
+      Variable == "smoking_statusExfumador" ~ "Tabaco: Exfumador (vs. Nunca)",
+      Variable == "smoking_statusFumador activo" ~ "Tabaco: Fumador Activo (vs. Nunca)",
       Variable == "cumulative_smoking_100_tabacco" ~ "Fumador Histórico (>= 100 cig)",
       Variable == "income_poverty_ratio" ~ "Nivel Socioeconómico (Ratio Pobreza)",
       Variable == "waist_circumference" ~ "Perímetro de Cintura (cm)",
@@ -269,7 +271,8 @@ cat("=======================================================\n")
 imp_mat <- importance(rf_model)
 df_imp <- data.frame(
   Variable = rownames(imp_mat),
-  Importance_Yes = imp_mat[, "Yes"]
+  # Truncar a 0 para eliminar ruido estocástico negativo por colinealidad y evitar solapamiento visual en el eje
+  Importance_Yes = pmax(imp_mat[, "Yes"], 0)
 )
 
 friendly_names <- c(
@@ -284,6 +287,7 @@ friendly_names <- c(
   "ethnicity_race"                    = "Etnia / Raza",
   "family_history_mi_under_50"        = "Historial Familiar (<50 años)",
   "sex"                               = "Sexo",
+  "smoking_status"                    = "Hábito Tabáquico",
   "cumulative_smoking_100_tabacco"    = "Fumador Histórico",
   "sleep_disorder_insomnia"           = "Insomnio / Trastorno del Sueño",
   "weekly_vigorous_physical_activity" = "Actividad Física Vigorosa"
@@ -295,7 +299,7 @@ df_imp$Nombre <- factor(df_imp$Nombre, levels = df_imp$Nombre[order(df_imp$Impor
 p_imp <- ggplot(df_imp, aes(x = Importance_Yes, y = Nombre)) +
   geom_col(fill = "#2b5c8f", width = 0.65) +
   geom_text(aes(label = sprintf("%.1f", Importance_Yes)), hjust = -0.15, size = 3.5, fontface = "bold", color = "gray25") +
-  scale_x_continuous(expand = expansion(mult = c(0, 0.12))) +
+  scale_x_continuous(expand = expansion(mult = c(0.01, 0.12)), limits = c(0, max(df_imp$Importance_Yes) * 1.12)) +
   theme_minimal(base_size = 12) +
   theme(
     plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
