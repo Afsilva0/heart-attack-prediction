@@ -1,3 +1,17 @@
+## ==============================================================================
+# PROYECTO DAS: PREDICCIÓN DE RIESGO CARDIOVASCULAR EN POBLACIÓN ADULTA (NHANES)
+# Pipeline Maestro Ejecutable
+## ==============================================================================
+
+## Verificación previa de librerías para garantizar reproducibilidad en cualquier entorno
+paquetes_requeridos <- c("dplyr", "pROC", "randomForest", "ggplot2", "tidyr", "nnet")
+for (pkg in paquetes_requeridos) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    message("Instalando dependencia necesaria: ", pkg)
+    install.packages(pkg, repos = "https://cloud.r-project.org/")
+  }
+}
+
 cat("\n=======================================================\n")
 cat("  INICIANDO PROYECTO: PREDICCIÓN DE RIESGO CARDIOVASCULAR\n")
 cat("=======================================================\n")

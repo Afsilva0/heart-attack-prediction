@@ -175,7 +175,7 @@ La frecuencia observada de MACE aumenta con la edad en ambos sexos. En el grupo 
 
 M2 presenta el mayor AUC puntual y el menor coste de esta tabla. Random Forest tiene la sensibilidad más alta, pero también más falsos positivos y un coste mayor que M2. La precisión de los modelos va del 15,8 % al 17,5 %. El AIC corresponde al ajuste de los modelos logísticos en entrenamiento, no es una métrica de rendimiento en test.
 
-![Curvas ROC de M0, M1 y M2 en el conjunto de prueba](heart-attack-prediction/curvas_roc_modelos_v2.png)
+![Curvas ROC de M0, M1 y M2 en el conjunto de prueba](heart-attack-prediction/curvas_roc_modelos.png)
 
 **Figura 4.** Comparación ROC en test; AUC de 0,804, 0,815 y 0,825 para M0, M1 y M2.
 

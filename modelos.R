@@ -5,14 +5,19 @@
 ## ==============================================================================
 
 if (!requireNamespace("pROC", quietly = TRUE)) {
-  install.packages("pROC")
+  install.packages("pROC", repos = "https://cloud.r-project.org/")
 }
-library(pROC)
+suppressPackageStartupMessages(library(pROC))
 
 if (!requireNamespace("randomForest", quietly = TRUE)) {
   install.packages("randomForest", repos = "https://cloud.r-project.org/")
 }
-library(randomForest)
+suppressPackageStartupMessages(library(randomForest))
+
+if (!requireNamespace("nnet", quietly = TRUE)) {
+  install.packages("nnet", repos = "https://cloud.r-project.org/")
+}
+suppressPackageStartupMessages(library(nnet))
 
 # ==============================================================================
 # MODELOS JERÁRQUICOS DE REGRESIÓN LOGÍSTICA (Diana MACE)
@@ -222,8 +227,7 @@ acciones_nivel <- c(
   "Muy alto" = "Derivación prioritaria a cardiología"
 )
 
-# ETAPA 2: Modelo multinomial del tipo de evento (entrenado solo con enfermos)
-library(nnet) 
+# ETAPA 2: Modelo multinomial del tipo de evento (entrenado solo con enfermos) 
 niveles_tipo <- c("Infarto", "Coronaria", "Angina") # "Infarto" = categoría de referencia
 train_pos <- train_data %>%
   filter(mace_target == 1) %>%

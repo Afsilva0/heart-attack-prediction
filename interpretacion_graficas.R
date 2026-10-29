@@ -56,33 +56,7 @@ cat(
 
 cat("\n--- Generando gráficas ROC (Modelos Jerárquicos MACE) ---\n")
 
-# Versión Base R
-png("curvas_roc_modelos.png", width = 800, height = 700, res = 120)
-
-plot(roc_m0_mace,
-  col = "#2b5c8f", lwd = 2.5,
-  main = "Comparativa de Modelos Jerárquicos (Curvas ROC en Test - Diana MACE)",
-  xlab = "Especificidad", ylab = "Sensibilidad",
-  legacy.axes = TRUE
-)
-plot(roc_m1_mace, col = "#c0392b", lwd = 2.5, add = TRUE)
-plot(roc_m2_mace, col = "#27ae60", lwd = 2.5, add = TRUE)
-abline(a = 0, b = 1, lty = 2, col = "grey50")
-
-legend("bottomright",
-  legend = c(
-    paste0("M0: Demografía (AUC = ", sprintf("%.3f", auc_m0_mace), ")"),
-    paste0("M1: Clínicos (AUC = ", sprintf("%.3f", auc_m1_mace), ")"),
-    paste0("M2: Hábitos / Integral (AUC = ", sprintf("%.3f", auc_m2_mace), ")")
-  ),
-  col = c("#2b5c8f", "#c0392b", "#27ae60"),
-  lwd = 2.5, bty = "o", bg = "white"
-)
-
-dev.off()
-cat("Gráfico exportado correctamente a 'curvas_roc_modelos.png'.\n")
-
-# Versión ggplot2 (corregida)
+# Versión oficial impecable (ggplot2): Curvas ROC con ejes formalmente correctos
 df_roc0 <- data.frame(
   fpr = 1 - roc_m0_mace$specificities,
   tpr = roc_m0_mace$sensitivities,
@@ -101,7 +75,7 @@ df_roc2 <- data.frame(
 df_roc_all <- rbind(df_roc0, df_roc1, df_roc2)
 df_roc_all$modelo <- factor(df_roc_all$modelo, levels = unique(df_roc_all$modelo))
 
-p_roc_v2 <- ggplot(df_roc_all, aes(x = fpr, y = tpr, color = modelo)) +
+p_roc_oficial <- ggplot(df_roc_all, aes(x = fpr, y = tpr, color = modelo)) +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray55", linewidth = 0.8) +
   geom_line(linewidth = 1.2) +
   scale_color_manual(values = c("#2b5c8f", "#d9534f", "#2e7d32")) +
@@ -134,8 +108,9 @@ p_roc_v2 <- ggplot(df_roc_all, aes(x = fpr, y = tpr, color = modelo)) +
     subtitle = "Capacidad de discriminación: Demografía (M0) vs. Clínicos (M1) vs. Hábitos (M2)"
   )
 
-ggsave("curvas_roc_modelos_v2.png", plot = p_roc_v2, width = 7.5, height = 6.5, dpi = 150)
-cat("Gráfico corregido exportado correctamente como 'curvas_roc_modelos_v2.png'.\n")
+# Exportar la gráfica ROC oficial y definitiva
+ggsave("curvas_roc_modelos.png", plot = p_roc_oficial, width = 7.5, height = 6.5, dpi = 150)
+cat("Gráfico ROC oficial exportado correctamente a 'curvas_roc_modelos.png'.\n")
 
 # ==============================================================================
 # EJE 2: COMPARATIVA INFARTO AISLADO vs MACE (ami_target vs mace_target)

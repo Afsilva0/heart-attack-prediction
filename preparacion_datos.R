@@ -4,14 +4,14 @@
 
 ## Carga de librerías necesarias
 if (!requireNamespace("dplyr", quietly = TRUE)) {
-  install.packages("dplyr")
+  install.packages("dplyr", repos = "https://cloud.r-project.org/")
 }
-library(dplyr)
+suppressPackageStartupMessages(library(dplyr))
 
 if (!requireNamespace("pROC", quietly = TRUE)) {
-  install.packages("pROC")
+  install.packages("pROC", repos = "https://cloud.r-project.org/")
 }
-library(pROC)
+suppressPackageStartupMessages(library(pROC))
 
 ## Carga de datasets
 demographic_base <- read.csv("Dataset/demographic.csv", header = TRUE)
@@ -201,6 +201,10 @@ data_merge <- data_merge %>%
   )
 
 # Definición del conjunto de variables que alimentarán los modelos
+# Nota metodológica (Cambio 3): 'education_level' (DMDEDUC2) fue preprocesada en el cruce inicial,
+# pero se excluye deliberadamente de vars_modelo por principio de parsimonia estadística:
+# el nivel socioeconómico queda sólidamente capturado de forma continua por 'income_poverty_ratio'
+# (ratio ingresos/pobreza), evitando sobreparametrizar los modelos con 4 variables dummy categóricas.
 vars_modelo <- c(
   # Identificador y dianas
   "SEQN", "ami_target", "mace_target", "tipo_evento",
