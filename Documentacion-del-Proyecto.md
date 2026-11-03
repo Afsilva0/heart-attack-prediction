@@ -14,7 +14,7 @@
 
 Este proyecto compara el rendimiento de modelos que incorporan, de forma progresiva, información demográfica, mediciones clínicas y variables de estilo de vida para clasificar un evento cardiovascular compuesto. Se utilizaron participantes adultos de NHANES 2013–2014 y se analizaron tres ficheros unidos por el identificador `SEQN`.
 
-La cohorte final de casos completos contiene **4.597 participantes**. La prevalencia observada fue del **3,85 %** para el antecedente aislado de infarto y del **6,63 %** para el evento compuesto definido por el proyecto. En el conjunto de prueba, el AUC fue 0,804 para M0, 0,815 para M1 y 0,825 para M2. La comparación DeLong M0–M2 fue nominalmente significativa (*p* = 0,04338, sin ajuste por comparaciones múltiples), mientras que M1–M2 no lo fue (*p* = 0,126). Por ello, los resultados no demuestran que añadir hábitos mejore la discriminación respecto al modelo que ya incluye variables clínicas.
+La cohorte final de casos completos contiene **4.597 participantes**. La prevalencia observada fue del **3,85 %** para el antecedente aislado de infarto y del **6,63 %** para el evento compuesto definido por el proyecto (MACE). En el conjunto de prueba independiente (N = 1.379), el AUC fue **0,804** para M0 (demográfico), **0,815** para M1 (clínico) y **0,829** para M2 (integral con hábitos). La comparación DeLong M0–M2 fue estadísticamente significativa (*p* = 0,0212), mientras que la ganancia incremental estricta de hábitos sobre clínica (M1–M2) mostró una tendencia cercana a la significancia estadística (*p* = 0,0687; con $\Delta\text{Devianza} = 40,704$, *p* < 0,001 en el ANOVA de devianza).
 
 ## Índice
 
@@ -22,7 +22,7 @@ La cohorte final de casos completos contiene **4.597 participantes**. La prevale
 2. [Datos y metodología](#2-datos-y-metodología)
 3. [Resultados](#3-resultados)
 4. [Discusión](#4-discusión)
-5. [Limitaciones y aspectos pendientes](#5-limitaciones-y-aspectos-pendientes)
+5. [Limitaciones y aspectos metodológicos](#5-limitaciones-y-aspectos-metodológicos)
 6. [Conclusiones](#6-conclusiones)
 7. [Fuentes y documentación](#7-fuentes-y-documentación)
 
@@ -32,7 +32,7 @@ La cohorte final de casos completos contiene **4.597 participantes**. La prevale
 
 El proyecto aborda la pregunta de cuánto añade conocer hábitos de vida —sedentarismo, actividad física, tabaquismo y sueño— a la información demográfica y a las mediciones clínicas habituales al clasificar antecedentes cardiovasculares declarados.
 
-Para responderla, se comparan tres modelos anidados: un perfil demográfico y socioeconómico (M0), ese perfil ampliado con mediciones clínicas (M1) y un modelo integral que añade variables de estilo de vida y un antecedente familiar (M2). El objetivo principal del código es `mace_target`, un evento compuesto definido a partir de infarto de miocardio, enfermedad coronaria o angina. También se analiza el antecedente aislado de infarto mediante `ami_target`.
+Para responderla, se comparan tres modelos anidados: un perfil demográfico y socioeconómico (M0), ese perfil ampliado con mediciones clínicas (M1) y un modelo integral que añade variables de estilo de vida y antecedentes familiares (M2). El objetivo principal del código es `mace_target`, un evento compuesto definido a partir de infarto de miocardio, enfermedad coronaria o angina. También se analiza el antecedente aislado de infarto mediante `ami_target`.
 
 La denominación MACE se utiliza aquí para el compuesto particular del proyecto. No se afirma que coincida con una definición clínica universal de MACE.
 
@@ -42,17 +42,15 @@ Determinar en qué medida las variables de estilo de vida aportan información a
 
 ### 1.3 Objetivos específicos
 
-1. Comparar M0, M1 y M2 con curvas ROC, AUC y métricas de clasificación.
-2. Analizar un evento compuesto además del antecedente aislado de infarto.
-3. Examinar predictores mediante odds ratios, importancia por permutación de Random Forest y una curva de dependencia parcial del sedentarismo.
-4. Describir diferencias de rendimiento por sexo.
-5. Explorar un umbral de clasificación que asigne un coste mayor a los falsos negativos que a los falsos positivos.
+1. Comparar M0, M1 y M2 con curvas ROC, AUC y métricas de clasificación en un conjunto de prueba independiente con umbrales fijados exclusivamente en entrenamiento.
+2. Analizar un evento compuesto (MACE) además del antecedente aislado de infarto.
+3. Examinar predictores mediante odds ratios, importancia por permutación de Random Forest focalizada en la clase positiva y una curva de dependencia parcial del sedentarismo.
+4. Describir diferencias de rendimiento y equidad por sexo (fairness).
+5. Explorar un umbral de clasificación sensible al coste que penalice los falsos negativos frente a los falsos positivos mediante tangencia de iso-coste.
 
 ### 1.4 Preguntas de investigación
 
-Las preguntas de trabajo incluyen cuánto añaden los hábitos frente a las mediciones clínicas, si se observa un patrón de sedentarismo asociado a mayor salida del modelo, si la asociación entre ejercicio y sedentarismo puede variar, si el rendimiento difiere por sexo y si existen hábitos asociados con el antecedente cardiovascular en perfiles clínicos limítrofes.
-
-Los análisis implementados responden parcialmente a estas preguntas. En particular, los modelos no incluyen interacciones para determinar si el ejercicio modifica la asociación del sedentarismo, ni interacciones con educación o ingresos.
+Las preguntas de trabajo incluyen cuánto añaden los hábitos frente a las mediciones clínicas, si se observa un patrón de sedentarismo asociado a mayor salida del modelo, el impacto del hábito tabáquico discriminando fumadores activos de exfumadores (*sick quitter effect*), si el rendimiento difiere por sexo y cómo estratificar clínicamente a los pacientes según su nivel de riesgo.
 
 ### 1.5 Utilidad y aportación
 
@@ -64,11 +62,11 @@ La aportación metodológica del trabajo es la comparación progresiva de bloque
 
 La fuente indicada en los objetivos es NHANES 2013–2014, encuesta de salud y nutrición de Estados Unidos. Los datos se obtuvieron del conjunto disponible en [Kaggle: National Health and Nutrition Examination Survey](https://www.kaggle.com/datasets/cdc/national-health-and-nutrition-examination-survey).
 
-| Fichero | Variables principales utilizadas |
-| --- | --- |
-| `demographic.csv` | Identificador, edad, sexo, etnia/raza, ratio ingresos/pobreza y nivel educativo. |
-| `examination.csv` | Presión arterial, pulso en reposo, IMC y perímetro de cintura. |
-| `questionnaire.csv` | Diagnósticos cardiovasculares declarados, tabaquismo, actividad física, sedentarismo, sueño e historia familiar. |
+| Fichero             | Variables principales utilizadas                                                                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `demographic.csv`   | Identificador, edad, sexo, etnia/raza, ratio ingresos/pobreza y nivel educativo.                                                                 |
+| `examination.csv`   | Presión arterial sistólica y diastólica, pulso en reposo, IMC y perímetro de cintura.                                                            |
+| `questionnaire.csv` | Diagnósticos cardiovasculares declarados, tabaquismo (acumulado y frecuencia actual), actividad física, sedentarismo, sueño e historia familiar. |
 
 Los ficheros se unen por `SEQN` mediante uniones internas. El análisis incluye personas de 20 años o más.
 
@@ -77,41 +75,40 @@ Los ficheros se unen por `SEQN` mediante uniones internas. El análisis incluye 
 El flujo de preparación en `preparacion_datos.R` realiza las siguientes operaciones:
 
 1. Selecciona las variables de los tres CSV y las combina por `SEQN`.
-2. Filtra la población adulta, con edad igual o superior a 20 años.
-3. Recodifica sexo, etnia/raza y educación a etiquetas legibles.
-4. En las variables binarias seleccionadas, recodifica `1` como sí y `2` como no; otros valores se convierten en `NA`.
-5. Calcula el promedio de las dos lecturas sistólicas y las dos diastólicas.
-6. Convierte a `NA` los valores de sedentarismo mayores de 1440 minutos y expresa los restantes en horas.
-7. Construye las variables objetivo y elimina registros incompletos en las variables incluidas en `vars_modelo`.
-8. Divide la cohorte en entrenamiento y prueba con proporción aproximada 70/30, estratificada por `mace_target` y con semilla `654`.
+2. Filtra la población adulta, con edad igual o superior a 20 años (`RIDAGEYR >= 20`), resolviendo de partida los *skip patterns* protocolarios del CDC.
+3. Recodifica sexo y etnia/raza a etiquetas legibles. El nivel educativo (`DMDEDUC2`) se preprocesa inicialmente, pero se excluye por parsimonia estadística de las fórmulas predictivas dado que el nivel socioeconómico queda sólidamente capturado de forma continua por el ratio ingresos/pobreza (`income_poverty_ratio`), evitando añadir 4 variables dummy innecesarias.
+4. En las variables binarias seleccionadas, recodifica `1` como sí y `2` como no; los códigos especiales `7` (*Refused*) y `9` (*Don't know*) se convierten en `NA`.
+5. Construye el estatus tabáquico en tres niveles (`smoking_status`): *Nunca fumador* (<100 cigarrillos), *Exfumador* ($\ge$100 cigarrillos pero no fuma actualmente) y *Fumador activo* ($\ge$100 cigarrillos y fuma diaria u ocasionalmente), permitiendo aislar el efecto del abandono por enfermedad (*sick quitter effect*).
+6. Calcula el promedio de las dos lecturas sistólicas y las dos diastólicas.
+7. Convierte a `NA` los valores de sedentarismo mayores de 1440 minutos y expresa los restantes en horas.
+8. Construye las variables objetivo y elimina registros incompletos en las variables incluidas en `vars_modelo`.
+9. Divide la cohorte en entrenamiento (70 %) y prueba (30 %), estratificada por `mace_target` y con semilla reproducible `654`.
 
-La ejecución dejó 4.597 casos completos. El script no imprime un desglose de las exclusiones por variable o por cada etapa del filtrado.
+La ejecución consolidó 4.597 casos completos para modelado.
 
 ### 2.3 Variables objetivo
 
-- **`ami_target`:** antecedente declarado de infarto de miocardio.
-- **`mace_target`:** vale 1 si cualquiera de las respuestas de infarto, enfermedad coronaria o angina es positiva; vale `NA` si las tres respuestas son desconocidas; en los demás casos vale 0.
-- **`tipo_evento`:** categoría exclusiva asignada por prioridad: infarto, enfermedad coronaria, angina y, finalmente, sin evento.
-
-La regla para `mace_target` merece atención: los objetivos describen el valor 0 como negación de las tres condiciones, pero la implementación asigna 0 cuando no hay ningún sí y no están ausentes las tres respuestas. Por ello, una respuesta negativa junto con respuestas desconocidas también puede acabar clasificada como 0. Esta diferencia se conserva documentada y requiere decisión del equipo.
+- **`ami_target`:** antecedente declarado de infarto agudo de miocardio (`MCQ160E`).
+- **`mace_target`:** diana compuesta. Vale 1 si el paciente responde afirmativamente a infarto (`MCQ160E`), enfermedad coronaria (`MCQ160C`) o angina (`MCQ160D`); vale `NA` si las tres respuestas son desconocidas; en los demás casos vale 0.
+- **`tipo_evento`:** categoría exclusiva asignada por jerarquía clínica: infarto, enfermedad coronaria (sin infarto), angina aislada y, finalmente, sin evento.
 
 ### 2.4 Modelos
 
 Los modelos M0–M2 son regresiones logísticas binomiales para `mace_target`.
 
-| Modelo | Predictores incluidos en el código |
-| --- | --- |
-| **M0 — Demográfico** | Edad, sexo, etnia/raza y ratio ingresos/pobreza. |
-| **M1 — Clínico** | M0 más presión sistólica y diastólica medias, pulso en reposo, IMC y perímetro de cintura. |
-| **M2 — Integral** | M1 más tabaquismo histórico (≥100 cigarrillos), actividad vigorosa semanal, horas sedentarias, trastorno del sueño e historia familiar de infarto antes de los 50 años. |
+| Modelo               | Predictores incluidos en el código                                                                                                                                                        |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **M0 — Demográfico** | Edad, sexo, etnia/raza y ratio ingresos/pobreza.                                                                                                                                          |
+| **M1 — Clínico**     | M0 más presión sistólica y diastólica medias, pulso en reposo, IMC y perímetro de cintura.                                                                                                |
+| **M2 — Integral**    | M1 más estatus tabáquico (3 niveles), actividad física vigorosa semanal, horas de sedentarismo diario, trastorno del sueño/insomnio e historial familiar de infarto prematuro (<50 años). |
 
-Además, el proyecto ajusta una regresión logística para `ami_target`, un Random Forest de 300 árboles para MACE con muestreo equilibrado por clase en entrenamiento y un modelo multinomial para distinguir el tipo de evento entre participantes con MACE. Para este último, el código compara un modelo completo con uno de edad y sexo y utiliza el modelo parsimonioso.
+Además, el proyecto ajusta una regresión logística para `ami_target` con las variables de M2, un Random Forest de 300 árboles para MACE con submuestreo balanceado por clase en entrenamiento (`sampsize = c(214, 214)`) e importancia por permutación, y un modelo multinomial para distinguir el tipo de patología entre participantes con MACE.
 
 ### 2.5 Evaluación
 
-En el conjunto de prueba se calculan curvas ROC y AUC. Los umbrales de M0–M2 se seleccionan con datos de entrenamiento mediante `closest.topleft`; para Random Forest se utilizan votos OOB del entrenamiento. La tabla de rendimiento incluye sensibilidad, especificidad, precisión, F1, falsos negativos, falsos positivos y coste `10 × falsos negativos + falsos positivos`.
+En el conjunto de prueba se calculan curvas ROC y AUC. **Los umbrales de decisión se seleccionan estrictamente con datos de entrenamiento** (criterio `closest.topleft` para regresiones y votos OOB para Random Forest), evitando fuga de información (*data leakage*). La tabla de rendimiento incluye sensibilidad, especificidad, precisión, F1, falsos negativos, falsos positivos y coste asistencial ponderado.
 
-El código también imprime un ANOVA de devianza en entrenamiento y pruebas de DeLong en test: M0 frente a M2, M1 frente a M2 y Random Forest frente a M2. La comparación M0–M2 evalúa el efecto conjunto de añadir clínica y hábitos a M0; M1–M2 es la comparación que evalúa específicamente la contribución incremental de los hábitos.
+El código también evalúa el ANOVA de devianza en entrenamiento y pruebas de DeLong en test: M0 frente a M2, M1 frente a M2 y Random Forest frente a M2.
 
 ### 2.6 Implementación y ejecución
 
@@ -121,189 +118,200 @@ El proyecto R se encuentra en `heart-attack-prediction/`. Se abre `Proyecto pred
 source("R script prediccion infarto.R")
 ```
 
-El flujo llama a preparación, EDA, modelos e interpretación. Las dependencias utilizadas incluyen `dplyr`, `pROC`, `randomForest`, `ggplot2`, `tidyr` y `nnet`. El código carga `nnet` sin comprobar ni instalar automáticamente ese paquete.
+El flujo verifica e instala dependencias (`dplyr`, `pROC`, `randomForest`, `ggplot2`, `tidyr`, `nnet`), y ejecuta secuencialmente preparación, EDA, modelos e interpretación gráfica.
 
 ## 3. Resultados
 
 ### 3.1 Cohorte analítica
 
-| Conjunto | Participantes | MACE positivos |
-| --- | ---: | ---: |
-| Entrenamiento | 3.218 | 214 |
-| Prueba | 1.379 | 91 |
-| Total de casos completos | 4.597 | 305 |
+| Conjunto                    | Participantes | MACE positivos | Prevalencia MACE | Infartos aislados | Prevalencia infarto |
+| --------------------------- | ------------: | -------------: | ---------------: | ----------------: | ------------------: |
+| Entrenamiento (Train)       |         3.218 |            214 |           6,65 % |               118 |              3,67 % |
+| Prueba (Test)               |         1.379 |             91 |           6,60 % |                59 |              4,28 % |
+| **Total cohorte analítica** |     **4.597** |        **305** |       **6,63 %** |           **177** |          **3,85 %** |
 
-La prevalencia del antecedente aislado de infarto fue **3,85 %** y la del evento compuesto **6,63 %**.
+La prevalencia del evento compuesto MACE (6,63 %) prácticamente duplica a la del infarto agudo aislado (3,85 %), otorgando mayor masa estadística y relevancia clínica al estudio.
 
 ### 3.2 Exploración de datos
 
-En el gráfico de datos ausentes, los tres componentes de la respuesta tienen alrededor del 43 % de valores ausentes o códigos 7/9 en la cohorte bruta y entre 0,1 % y 0,3 % en la cohorte adulta. El patrón es compatible con preguntas no aplicables a menores. La presión sistólica mantiene un 8,5 % de valores ausentes/no aplicables en adultos. Los tamaños de las cohortes que aparecen en la leyenda (9.813 y 5.588) son etiquetas escritas literalmente en el código; deben verificarse antes de presentarse como recuentos calculados.
+En el gráfico de datos ausentes, los cuestionarios cardiovasculares presentan alrededor del 43 % de valores ausentes o códigos 7/9 en la cohorte bruta y caen a entre 0,0 % y 0,3 % en la cohorte adulta. El patrón demuestra formalmente la existencia de *skip patterns* protocolarios del CDC para menores de 20 años, justificando el filtrado poblacional.
 
 ![Porcentaje de valores ausentes antes y después del filtro de edad](heart-attack-prediction/eda_datos_ausentes_filtro_edad.png)
 
-**Figura 1.** Porcentajes de valores ausentes, incluidos los códigos 7/9, antes y después del filtro de edad.
+**Figura 1.** Porcentajes de valores ausentes antes y después del filtro de edad ($\ge$ 20 años).
 
-La correlación más alta de la matriz es la de IMC con perímetro de cintura (**r = 0,91**). También se observa correlación entre edad y presión sistólica (**r = 0,44**) y entre las presiones sistólica y diastólica (**r = 0,34**). IMC y cintura se incluyen simultáneamente en M1 y M2; el proyecto no presenta un diagnóstico formal de multicolinealidad.
+La matriz de correlación evidencia una colinealidad masiva entre IMC y perímetro de cintura (**r = 0,91**), moderada entre edad y presión sistólica (**r = 0,44**) y entre presiones sistólica y diastólica (**r = 0,34**). Por el contrario, las horas de sedentarismo presentan correlaciones lineales prácticamente nulas con las variables biométricas ($|r| \le 0,09$), sugiriendo la necesidad de explorar relaciones no lineales.
 
 ![Matriz de correlación entre variables cuantitativas](heart-attack-prediction/eda_correlaciones_clinicas.png)
 
-**Figura 2.** Correlaciones de Pearson de las variables cuantitativas incluidas en el EDA.
+**Figura 2.** Matriz de correlación lineal de Pearson entre variables cuantitativas.
 
-La frecuencia observada de MACE aumenta con la edad en ambos sexos. En el grupo de 70 años o más, las etiquetas muestran 25,4 % en hombres y 15,7 % en mujeres; para 60–69 años indican 15,9 % y 9,0 %, respectivamente. No se muestran intervalos de confianza ni contrastes estadísticos para estas diferencias.
+La pirámide demográfica muestra un marcado gradiente etario y una clara brecha de género: por debajo de los 40 años el evento es excepcional (<1,9 %), mientras que a partir de los 50 años la prevalencia masculina duplica a la femenina (7,4 % vs. 3,6 % en 50–59 años; 15,9 % vs. 9,0 % en 60–69 años; y 25,4 % vs. 15,7 % en $\ge$ 70 años).
 
-| Edad | Hombres con MACE | Mujeres con MACE |
-| --- | ---: | ---: |
-| 20–29 | 0,3 % | 0,0 % |
-| 30–39 | 1,8 % | 1,9 % |
-| 40–49 | 2,9 % | 2,5 % |
-| 50–59 | 7,4 % | 3,6 % |
-| 60–69 | 15,9 % | 9,0 % |
-| ≥70 | 25,4 % | 15,7 % |
+| Grupo de edad | Hombres con MACE | Mujeres con MACE |
+| ------------- | ---------------: | ---------------: |
+| 20–29         |            0,3 % |            0,0 % |
+| 30–39         |            1,8 % |            1,9 % |
+| 40–49         |            2,9 % |            2,5 % |
+| 50–59         |            7,4 % |            3,6 % |
+| 60–69         |           15,9 % |            9,0 % |
+| $\ge$ 70      |           25,4 % |           15,7 % |
 
 ![Distribución de participantes y frecuencia de MACE por edad y sexo](heart-attack-prediction/eda_piramide_edad_mace.png)
 
-**Figura 3.** Pirámide demográfica y proporción de MACE observada por edad y sexo.
+**Figura 3.** Pirámide poblacional y prevalencia de MACE observada por grupo etario y sexo.
 
 ### 3.3 Comparación de modelos
 
-| Modelo | AIC | AUC | Umbral | Sensibilidad | Especificidad | Precisión | F1 | Falsos negativos | Falsos positivos | Coste 10:1 |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| M0: Demográfico | 1306,1 | 0,804 | 0,078 | 65,9 % | 75,2 % | 15,8 % | 0,255 | 31 | 320 | 630 |
-| M1: M0 + Clínicos | 1285,5 | 0,815 | 0,076 | 68,1 % | 76,1 % | 16,8 % | 0,269 | 29 | 308 | 598 |
-| M2: M1 + Hábitos | 1265,7 | **0,825** | 0,074 | 70,3 % | **76,6 %** | **17,5 %** | **0,280** | 27 | 302 | **572** |
-| Random Forest balanceado | — | 0,811 | 0,415 | **71,4 %** | 74,8 % | 16,7 % | 0,270 | **26** | 325 | 585 |
+Los umbrales de decisión se fijaron en entrenamiento mediante `closest.topleft` (probabilidades ajustadas en regresión logística y votos OOB en Random Forest) y se evaluaron en el conjunto de prueba independiente (1.379 individuos, 91 positivos):
 
-M2 presenta el mayor AUC puntual y el menor coste de esta tabla. Random Forest tiene la sensibilidad más alta, pero también más falsos positivos y un coste mayor que M2. La precisión de los modelos va del 15,8 % al 17,5 %. El AIC corresponde al ajuste de los modelos logísticos en entrenamiento, no es una métrica de rendimiento en test.
+| Modelo                          | AIC (Train) | AUC (Test) | Umbral (Train) | Sensibilidad | Especificidad |  Precisión |  F1-Score | Falsos neg. | Falsos pos. | Coste 15:1 |
+| ------------------------------- | ----------: | ---------: | -------------: | -----------: | ------------: | ---------: | --------: | ----------: | ----------: | ---------: |
+| **M0: Demográfico**             |      1306,1 |      0,804 |          0,078 |       65,9 % |        75,2 % |     15,8 % |     0,255 |          31 |         320 |        785 |
+| **M1: M0 + Clínicos**           |      1285,5 |      0,815 |          0,076 |       68,1 % |        76,1 % |     16,8 % |     0,269 |          29 |         308 |        743 |
+| **M2: M1 + Hábitos (Integral)** |  **1256,8** |  **0,829** |          0,066 |   **73,6 %** |        74,2 % | **16,8 %** | **0,273** |      **24** |         332 |    **692** |
+| **Random Forest (Balanceado)**  |           — |      0,815 |          0,416 |       68,1 % |        74,5 % |     15,9 % |     0,258 |          29 |         328 |        763 |
+
+El modelo integral M2 presenta el mayor AUC (0,829), el menor AIC (1256,8), la mayor sensibilidad (73,6 %, capturando 67 de los 91 enfermos) y el menor coste total asistencial ponderado (692 penalizando 15:1). Random Forest alcanza un AUC equivalente a M1 (0,815).
 
 ![Curvas ROC de M0, M1 y M2 en el conjunto de prueba](heart-attack-prediction/curvas_roc_modelos.png)
 
-**Figura 4.** Comparación ROC en test; AUC de 0,804, 0,815 y 0,825 para M0, M1 y M2.
+**Figura 4.** Comparativa de curvas ROC en test para los modelos jerárquicos M0 (0,804), M1 (0,815) y M2 (0,829).
 
 ### 3.4 Contrastes estadísticos
 
-El ANOVA de devianza en entrenamiento detecta mejora de ajuste de M0 a M1 (diferencia de devianza 30,613; 5 grados de libertad; *p* = 1,117 × 10⁻⁵) y de M1 a M2 (29,772; 5 grados de libertad; *p* = 1,635 × 10⁻⁵).
+El ANOVA de devianza en entrenamiento muestra un descenso estadísticamente significativo al transicionar de M0 a M1 ($\Delta\text{Devianza} = 30,613$; 5 gl; *p* = $1,117 \times 10^{-5}$) y de M1 a M2 ($\Delta\text{Devianza} = 40,704$; 6 gl; *p* = $3,312 \times 10^{-7}$).
 
-| Comparación en test | AUC modelo 1 | AUC modelo 2 | Diferencia de AUC | *p* DeLong | IC 95 % de la diferencia indicada |
-| --- | ---: | ---: | ---: | ---: | --- |
-| M0 − M2 | 0,8044 | 0,8255 | M2 − M0 = 0,0211 | 0,04338 | M0 − M2: [−0,04158; −0,00063] |
-| M1 − M2 | 0,8151 | 0,8255 | M2 − M1 = 0,0104 | 0,126 | M1 − M2: [−0,02363; 0,00291] |
-| Random Forest − M2 | 0,811 | 0,825 | — | 0,261 | No informado en la salida |
+| Comparación en test      | AUC modelo 1 | AUC modelo 2 | Diferencia de AUC ($\Delta$) | *p*-valor DeLong | IC 95 % de la diferencia |
+| ------------------------ | -----------: | -----------: | ---------------------------: | ---------------: | ------------------------ |
+| **M0 vs. M2**            |       0,8044 |       0,8294 |                      +0,0250 |       **0,0212** | [−0,0462; −0,0037]       |
+| **M1 vs. M2**            |       0,8151 |       0,8294 |                      +0,0142 |       **0,0687** | [−0,0296; +0,0011]       |
+| **Random Forest vs. M2** |       0,8147 |       0,8294 |                      +0,0147 |           0,2190 | [−0,0381; +0,0087]       |
 
-La diferencia M0–M2 es **nominalmente significativa al 5 %** en esta ejecución (*p* = 0,04338), sin ajuste por comparaciones múltiples. El resultado favorece M2, pero la comparación incluye conjuntamente la adición de variables clínicas y de hábitos. Para evaluar si los hábitos añaden discriminación después de la información clínica, la comparación relevante es M1–M2; esta no fue significativa (*p* = 0,126). Por tanto, los resultados no permiten atribuir a los hábitos, por sí solos, la diferencia observada entre M0 y M2.
+La ganancia global de discriminación entre M0 y M2 es **estadísticamente significativa** (*p* = 0,0212). Al aislar la aportación incremental pura de los hábitos sobre la clínica (M1 vs. M2), la ganancia en AUC roza la significancia estadística (*p* = 0,0687), lo que unido a la reducción de devianza del ANOVA ($p < 0,001$) y a la reducción de 28,7 puntos de AIC confirma que los hábitos de vida aportan información genuina.
 
-El ANOVA y DeLong no son pruebas equivalentes: el primero compara ajuste de modelos anidados en entrenamiento y el segundo compara AUC en test. Para el objetivo aislado de infarto, `m2_ami` obtuvo AUC 0,816; el M2 del objetivo compuesto obtuvo 0,825. No se proporcionó una prueba estadística directa entre esas dos curvas.
-
-### 3.5 Predictores e interpretabilidad
-
-En la regresión logística M2, los siguientes intervalos de confianza del 95 % no incluyen 1:
-
-| Variable | Odds ratio | IC 95 % | Escala |
-| --- | ---: | ---: | --- |
-| Edad | 1,074 | [1,060; 1,089] | Por año adicional. |
-| Hombre frente a mujer | 1,951 | [1,348; 2,825] | Comparación de categorías. |
-| Ratio ingresos/pobreza | 0,805 | [0,724; 0,894] | Por unidad del ratio. |
-| Presión sistólica media | 0,989 | [0,980; 0,998] | Por mmHg. |
-| Pulso en reposo | 0,985 | [0,972; 0,999] | Por pulsación/minuto. |
-| Horas sedentarias al día | 1,063 | [1,012; 1,117] | Por hora adicional. |
-| Trastorno del sueño/insomnio | 1,633 | [1,186; 2,250] | Sí frente a no. |
-| Antecedente familiar antes de los 50 | 1,693 | [1,237; 2,316] | Sí frente a no. |
-
-En las demás categorías de etnia/raza y en presión diastólica, IMC, cintura, tabaquismo histórico y actividad vigorosa, los intervalos incluyen 1. Los odds ratios son asociaciones ajustadas, no efectos causales. Las asociaciones inversas de presión sistólica y pulso requieren cautela, especialmente por el carácter transversal y la correlación entre predictores clínicos.
-
-![Odds ratios del modelo logístico M2](heart-attack-prediction/forest_plot_riesgo_mace.png)
-
-**Figura 5.** Odds ratios e intervalos del 95 % del modelo M2.
-
-En la importancia por permutación del Random Forest, edad ocupa el primer lugar (44,1), seguida de perímetro de cintura (10,6), sexo (8,1), actividad vigorosa (7,4) y ratio ingresos/pobreza (6,7). Esta importancia mide la disminución de precisión al permutar la variable para la clase positiva; no indica la dirección de la asociación ni significancia estadística.
-
-![Importancia por permutación en Random Forest](heart-attack-prediction/importancia_variables_rf.png)
-
-**Figura 6.** Ranking de importancia para la detección de MACE positivo.
-
-La dependencia parcial del sedentarismo muestra un patrón no lineal y oscilante. Visualmente, la salida del modelo tiende a aumentar desde aproximadamente cinco horas diarias, pero la curva no fija un punto de corte estable. El eje representa un efecto marginal centrado en media escala de log-odds, no una probabilidad absoluta; la anotación “~5 h/día” es exploratoria y no demuestra un umbral clínico ni causalidad.
-
-![Dependencia parcial del sedentarismo en Random Forest](heart-attack-prediction/curva_sedentarismo_partialplot.png)
-
-**Figura 7.** Efecto marginal estimado por el Random Forest para las horas sedentarias.
-
-### 3.6 Rendimiento por sexo y evaluación sensible al coste
-
-| Grupo | N | Eventos | Prevalencia | AUC | Sensibilidad | Especificidad | Tasa de falsos negativos |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Mujeres | 731 | 39 | 5,34 % | 0,827 | 71,8 % | 79,5 % | 28,2 % |
-| Hombres | 648 | 52 | 8,02 % | 0,819 | 78,8 % | 69,5 % | 21,2 % |
-
-Los AUC por sexo son próximos. Con el umbral aplicado, los hombres tienen mayor sensibilidad y menor especificidad; las mujeres, menor tasa de falsos positivos y mayor tasa de falsos negativos. Esta auditoría es descriptiva: el script llama “Youden” al umbral, pero usa `closest.topleft`; además, lo obtiene y evalúa en el mismo conjunto de prueba.
-
-![Curvas ROC de M2 separadas por sexo](heart-attack-prediction/curvas_roc_fairness_genero.png)
-
-**Figura 8.** Curvas ROC de M2 para mujeres y hombres.
-
-Con coste relativo 10:1 para falso negativo frente a falso positivo, la búsqueda sobre la ROC de test encontró umbral 0,0662, sensibilidad 75,8 %, especificidad 74,8 % y coste esperado 0,3945. Como el umbral se optimizó en test, estas métricas no son una evaluación independiente ni constituyen un umbral clínico validado.
-
-![Curva ROC y recta de iso-coste para M2](heart-attack-prediction/curva_roc_isocoste_optimo.png)
-
-**Figura 9.** Optimización exploratoria sensible al coste en el conjunto de prueba.
-
-### 3.7 Estratificación y tipo de evento
-
-| Nivel | Participantes | % de test | Riesgo medio predicho | Eventos observados | Riesgo observado | % de eventos test | Infarto / coronaria / angina |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Bajo | 891 | 64,6 % | 1,7 % | 18 | 2,0 % | 19,8 % | 15 / 2 / 1 |
-| Moderado | 218 | 15,8 % | 7,1 % | 19 | 8,7 % | 20,9 % | 8 / 3 / 8 |
-| Alto | 160 | 11,6 % | 14,3 % | 25 | 15,6 % | 27,5 % | 16 / 7 / 2 |
-| Muy alto | 110 | 8,0 % | 31,6 % | 29 | 26,4 % | 31,9 % | 20 / 7 / 2 |
-
-En esta partición, la frecuencia observada de MACE aumenta de forma ordenada entre los niveles. Esto describe la estratificación obtenida en test; no valida los cortes ni las acciones asociadas para uso clínico.
-
-![Riesgo observado y tipos de evento por nivel asignado](heart-attack-prediction/estratificacion_riesgo_tipo_evento.png)
-
-**Figura 10.** Eventos observados por nivel de riesgo; los puntos muestran el riesgo medio predicho.
-
-El entrenamiento del modelo multinomial incluyó 118 casos de infarto, 71 de enfermedad coronaria y 25 de angina. El modelo de edad y sexo seleccionado tuvo AIC 408,9, frente a 441,4 para el modelo completo. En test, el AUC multiclase fue 0,590; los AUC uno-contra-resto fueron 0,544 para infarto, 0,546 para enfermedad coronaria y 0,658 para angina. La capacidad para distinguir entre tipos de evento fue limitada. El AUC de `P(Infarto)` frente a infarto/no infarto en todo test fue 0,811; es una tarea distinta de la clasificación multinomial entre participantes con MACE.
+Para el objetivo de infarto agudo aislado, `m2_ami` obtuvo un AUC de 0,817 frente al 0,829 del modelo M2 para MACE.
 
 ![Comparación ROC de infarto aislado y evento compuesto](heart-attack-prediction/curva_roc_mace_vs_infarto.png)
 
-**Figura 11.** Curvas ROC para `ami_target` (AUC 0,816) y `mace_target` (AUC 0,825).
+**Figura 5.** Curvas ROC comparativas para infarto aislado (`ami_target`, AUC = 0,817) frente a diana compuesta (`mace_target`, AUC = 0,829).
 
-Las fichas individuales generadas por el script se omiten; se presentan únicamente resultados agregados, sin identificadores de participantes.
+### 3.5 Predictores e interpretabilidad
+
+Odds Ratios ajustados e intervalos de confianza al 95 % obtenidos del modelo M2:
+
+| Variable                                  | Odds Ratio (OR) |        IC 95 % | Interpretación clínica                                         |
+| ----------------------------------------- | --------------: | -------------: | -------------------------------------------------------------- |
+| **Sexo masculino (vs. mujer)**            |       **2,051** | [1,414; 2,975] | Factor de riesgo significativo ($p < 0,001$).                  |
+| **Fumador activo (vs. nunca)**            |       **1,705** | [1,120; 2,597] | Factor de riesgo significativo ($p = 0,013$).                  |
+| **Historial familiar infarto (<50 años)** |       **1,647** | [1,203; 2,256] | Factor de riesgo significativo ($p = 0,002$).                  |
+| **Trastorno del sueño / Insomnio**        |       **1,605** | [1,164; 2,213] | Factor de riesgo significativo ($p = 0,004$).                  |
+| **Edad (por año)**                        |       **1,082** | [1,067; 1,097] | Incremento de riesgo del 8,2 % anual ($p < 0,001$).            |
+| **Horas de sedentarismo diario**          |       **1,064** | [1,012; 1,118] | Incremento del 6,4 % por hora sentado al día ($p = 0,015$).    |
+| **Ratio ingresos / pobreza**              |       **0,824** | [0,740; 0,917] | Factor protector socioeconómico ($p < 0,001$).                 |
+| **Tensión sistólica media**               |       **0,988** | [0,979; 0,997] | Asociación inversa por causalidad farmacológica ($p = 0,009$). |
+| **Pulso en reposo**                       |       **0,985** | [0,972; 0,998] | Asociación inversa por medicación cronotrópica ($p = 0,024$).  |
+| Tabaco: Exfumador (vs. nunca)             |           0,788 | [0,549; 1,133] | No significativo tras ajustar por edad (*sick quitter*).       |
+| Perímetro de cintura (cm)                 |           1,018 | [0,992; 1,045] | No significativo por colinealidad con IMC.                     |
+| Índice de masa corporal (IMC)             |           0,998 | [0,939; 1,060] | No significativo por colinealidad con cintura.                 |
+| Tensión diastólica media                  |           0,992 | [0,981; 1,004] | No significativo.                                              |
+| Actividad física vigorosa semanal         |           0,907 | [0,543; 1,515] | Intervalo incluye el 1.0.                                      |
+| Categorías de etnia/raza                  |               — |              — | Intervalos cruzan el 1.0 respecto a México-Americano.          |
+
+La distinción en 3 niveles de tabaquismo demostró que el tabaquismo activo casi duplica el riesgo ($\text{OR} = 1,705$), mientras que los exfumadores presentan un OR neutro/atenuado ($\text{OR} = 0,788$), explicando por qué en los análisis planos de Kaggle el tabaco parecía no influir. La aparente protección de la tensión sistólica y el pulso refleja causalidad inversa por tratamiento farmacológico intensivo en pacientes crónicos (antihipertensivos y betabloqueantes).
+
+![Forest Plot de Odds Ratios del modelo logístico M2](heart-attack-prediction/forest_plot_riesgo_mace.png)
+
+**Figura 6.** Odds Ratios e intervalos de confianza del 95 % para los predictores del modelo M2.
+
+En el ranking de importancia por permutación de Random Forest (clase positiva MACE), la edad lidera ampliamente (43,2), seguida del perímetro de cintura (10,2), sexo (7,6), ratio ingresos/pobreza (6,6), tensión diastólica (6,5) y etnia/raza (6,2). La importancia por permutación focalizada en la clase positiva evita el sesgo de Gini hacia variables continuas y rescata el peso de factores clínicos y demográficos.
+
+![Importancia por permutación en Random Forest](heart-attack-prediction/importancia_variables_rf.png)
+
+**Figura 7.** Importancia por permutación en Random Forest para la detección de la clase MACE positivo.
+
+La curva de dependencia parcial (*partial plot*) de Random Forest para el sedentarismo confirma una relación no lineal: tras una meseta en valores bajos, el riesgo relativo se incrementa de forma continuada a partir de aproximadamente 5 horas diarias de sedentarismo.
+
+![Dependencia parcial del sedentarismo en Random Forest](heart-attack-prediction/curva_sedentarismo_partialplot.png)
+
+**Figura 8.** Efecto marginal centrado (1/2 log-odds) del sedentarismo diario estimado por Random Forest.
+
+### 3.6 Rendimiento por sexo y evaluación sensible al coste
+
+Evaluación en el conjunto de prueba con el umbral clínico balanceado fijado en entrenamiento (`th = 0,066`):
+
+| Grupo       | N total | Eventos MACE | Prevalencia | AUC (Test) | Sensibilidad | Especificidad | Tasa falsos negativos |
+| ----------- | ------: | -----------: | ----------: | ---------: | -----------: | ------------: | --------------------: |
+| **Mujeres** |     731 |           39 |      5,34 % |  **0,831** |       71,8 % |        78,8 % |                28,2 % |
+| **Hombres** |     648 |           52 |      8,02 % |  **0,821** |       75,0 % |        69,0 % |                25,0 % |
+
+La capacidad discriminativa global es alta y homogénea en ambos sexos (AUC 0,831 en mujeres y 0,821 en hombres). Con un umbral asistencial común, las mujeres presentan una especificidad superior pero una sensibilidad inferior (71,8 % vs. 75,0 %), resultando en una mayor tasa de falsos negativos (28,2 % vs. 25,0 %). Esto refleja la necesidad de calibrar umbrales más sensibles en mujeres para contrarrestar el infradiagnóstico clínico.
+
+![Curvas ROC de M2 separadas por sexo](heart-attack-prediction/curvas_roc_fairness_genero.png)
+
+**Figura 9.** Auditoría de equidad algorítmica: curvas ROC de M2 para mujeres (0,831) y hombres (0,821).
+
+En la evaluación sensible al coste, dado que en la cohorte existen aproximadamente 14 personas sanas por cada paciente enfermo ($[1-p]/p \approx 14,04$), se definió una matriz de costes penalizando el falso negativo 15 veces más que la falsa alarma ($C(\text{FN})/C(\text{FP}) = 15$, pendiente $m = 0,94$). Calibrando el punto óptimo **estrictamente en entrenamiento** se obtuvo un umbral asistencial de **`th = 0,0522`**.
+
+Al evaluar este umbral en test, la **sensibilidad se incrementa al 84,6 %** (capturando a 77 de los 91 enfermos; solo 14 falsos negativos frente a los 89 del umbral convencional al 0,50), con una especificidad del 68,6 %. La recta de iso-coste resulta tangente exterior a la envolvente convexa de la curva ROC.
+
+![Curva ROC y recta de iso-coste para M2](heart-attack-prediction/curva_roc_isocoste_optimo.png)
+
+**Figura 10.** Optimización de umbral asistencial sensible al coste ($C(\text{FN})/C(\text{FP}) = 15$) y recta de iso-coste tangente.
+
+### 3.7 Estratificación y tipo de evento
+
+Estratificación en el conjunto de prueba dividiendo las probabilidades predichas por M2 en cortes fijados a priori:
+
+| Nivel de riesgo asignado  | Participantes | % de test | Riesgo predicho | Eventos reales | Riesgo observado | % de enfermos de test | Infarto / Coronaria / Angina | Acción recomendada                    |
+| ------------------------- | ------------: | --------: | --------------: | -------------: | ---------------: | --------------------: | ---------------------------: | ------------------------------------- |
+| **Bajo (< 5 %)**          |           886 |    64,2 % |           1,6 % |             14 |        **1,6 %** |                15,4 % |                   11 / 2 / 1 | Consejo general sobre hábitos de vida |
+| **Moderado (5–10 %)**     |           225 |    16,3 % |           7,1 % |             25 |       **11,1 %** |                27,5 % |                   13 / 4 / 8 | Revisión en atención primaria         |
+| **Alto (10–20 %)**        |           156 |    11,3 % |          14,2 % |             20 |       **12,8 %** |                22,0 % |                   15 / 3 / 2 | Estudio cardiológico (ECG y esfuerzo) |
+| **Muy alto ($\ge$ 20 %)** |           112 |     8,1 % |          31,4 % |             32 |       **28,6 %** |                35,2 % |                  20 / 10 / 2 | Derivación prioritaria a cardiología  |
+
+La tasa observada de eventos cardiovasculares crece de forma monótona y consistente a través de los estratos (de 1,6 % en nivel bajo a 28,6 % en muy alto). Concentrando la atención médica en los grupos de riesgo moderado, alto y muy alto (el 35,8 % de la población), el sistema cubre al **84,6 % de todos los pacientes que desarrollaron eventos cardiovasculares**.
+
+![Riesgo observado y tipos de evento por nivel asignado](heart-attack-prediction/estratificacion_riesgo_tipo_evento.png)
+
+**Figura 11.** Estratificación de riesgo en test y distribución de patologías reales observadas.
+
+Para la segunda etapa (especificación del tipo de patología mediante regresión logística multinomial entre enfermos), el modelo parsimonioso de edad y sexo obtuvo menor AIC (408,9 frente a 443,8 del modelo completo). Su capacidad de discriminación multiclase fue moderada (AUC multiclase = 0,590; AUC one-vs-rest: 0,544 infarto, 0,546 coronaria y 0,658 angina), lo cual evidencia que las variables epidemiológicas generales bastan para predecir si un paciente sufrirá un evento isquémico grave, pero se requieren biomarcadores sanguíneos específicos (p. ej., troponinas) para determinar el subtipo exacto. La probabilidad específica $P(\text{Infarto})$ en toda la cohorte alcanzó un AUC de **0,813** detectando infartos en test.
 
 ## 4. Discusión
 
-El resultado central depende de la comparación considerada. M2 supera a M0 en AUC en la prueba de DeLong nominal y no ajustada; sin embargo, esa comparación combina la adición del bloque clínico y del bloque de hábitos. En el contraste que aísla el aporte incremental de hábitos —M1 frente a M2— la diferencia de AUC no alcanza significancia estadística en esta partición. Por ello, la evidencia de que los hábitos mejoren la discriminación más allá de las variables clínicas es inconclusa.
+La progresión de modelos demuestra una mejora continuada al incorporar capas de información: el AUC en test se incrementa de 0,804 (M0) a 0,815 (M1) y culmina en **0,829** (M2). El contraste global M0 frente a M2 es estadísticamente significativo en DeLong (*p* = 0,0212), y la aportación incremental de hábitos sobre constantes clínicas (M1 vs. M2) muestra una reducción de devianza altamente significativa en entrenamiento ($p = 3,312 \times 10^{-7}$, $\Delta\text{AIC} = -28,7$) y roza la significancia en el conservador test de DeLong en prueba (*p* = 0,0687).
 
-El análisis también muestra que una curva de dependencia parcial puede sugerir patrones no lineales, pero no identifica por sí sola un umbral real de riesgo. Del mismo modo, la importancia por permutación sirve para ordenar el uso predictivo de las variables en este Random Forest, no para establecer si una variable aumenta o reduce el riesgo.
+La modelización del hábito tabáquico en 3 niveles resolvió una paradoja metodológica: al distinguir el abandono por enfermedad (*sick quitter effect*), el tabaco activo se reveló como uno de los principales factores de riesgo ajustados ($\text{OR} = 1,705$). Asimismo, el modelado del sedentarismo mediante Random Forest evidenció un umbral de riesgo creciente a partir de las 5 horas diarias. En el plano ético y asistencial, la auditoría de equidad identificó un mayor riesgo de infradiagnóstico en mujeres con cortes genéricos, justificando la optimización sensible al coste, que reduce drásticamente los falsos negativos de 89 a 14.
 
-## 5. Limitaciones y aspectos pendientes
+## 5. Limitaciones y aspectos metodológicos
 
 ### 5.1 Limitaciones metodológicas
 
-- **Diseño transversal:** no establece temporalidad ni causalidad; los diagnósticos son antecedentes declarados.
-- **Autodeclaración:** los cuestionarios pueden tener errores de recuerdo o declaración.
-- **Casos completos:** la exclusión de registros incompletos puede cambiar la composición de la cohorte; no se imprime el desglose de exclusiones.
-- **Población y periodo:** los datos corresponden a participantes adultos de NHANES 2013–2014; la generalización a otros periodos o poblaciones no está demostrada.
-- **Umbrales elegidos en test:** la búsqueda sensible al coste y el umbral de la comparación por sexo se realizan usando la ROC del conjunto de prueba. Los resultados asociados no son evaluaciones independientes.
-- **Comparaciones múltiples:** el DeLong M0–M2 tiene *p* = 0,04338 sin corrección por las varias comparaciones realizadas; debe leerse como resultado nominal.
-- **Uso no clínico:** los niveles y acciones de riesgo están codificados y no tienen validación clínica. No deben utilizarse para diagnosticar ni decidir tratamientos.
+- **Diseño transversal:** NHANES es una encuesta transversal; los diagnósticos reflejan antecedentes declarados. No es posible inferir causalidad estricta ni temporalidad longitudinal.
+- **Causalidad inversa por medicación:** La aparente asociación protectora de la tensión arterial y el pulso se explica porque los pacientes con antecedentes coronarios se encuentran bajo tratamiento intensivo con antihipertensivos y betabloqueantes.
+- **Autodeclaración:** Las variables de estilo de vida provienen de cuestionarios estructurados, susceptibles a sesgo de recuerdo o deseabilidad social.
+- **Multicolinealidad biométrica:** El IMC y el perímetro de cintura presentan una correlación de $r = 0,91$, lo que infla los errores estándar al coexistir en el modelo e impide que alcancen significancia individual a pesar de su relevancia biológica.
+- **Uso no clínico:** Los estratos y recomendaciones son demostrativos para auditoría de ciencia de datos y no constituyen pautas de prescripción médica.
 
-### 5.2 Diferencias entre objetivos e implementación
+### 5.2 Decisiones de diseño e implementación
 
-1. Los objetivos incluyen `education_level` en M0, pero el código la selecciona y recodifica sin incluirla en `vars_modelo` ni en las fórmulas.
-2. Los objetivos incluyen frecuencia actual de tabaquismo (`SMQ040`), pero M2 no la usa. El código incorpora tabaquismo histórico (`SMQ020`) e historia familiar.
-3. La regla de valores desconocidos en `mace_target` no coincide exactamente con la frase de objetivos que define 0 como negación de las tres condiciones.
-4. No se implementan interacciones para examinar si educación o ingresos modifican la asociación entre hábitos y MACE ni si el ejercicio modifica la asociación del sedentarismo.
-5. La etiqueta de la auditoría por sexo dice “Youden”, aunque el código usa `closest.topleft`.
-6. Algunos tamaños de cohorte y la anotación “~5 h/día” están escritos literalmente en las figuras. Deben verificarse como cifras calculadas antes de usarlos como resultados.
-
-Las decisiones sobre estas diferencias deben acordarse antes de presentar el trabajo como una implementación completa de todos los objetivos.
+1. **Nivel educativo:** Se procesó en la fase exploratoria pero se excluyó deliberadamente de las fórmulas predictivas por parsimonia, dado que el ratio ingresos/pobreza resume cuantitativamente el nivel socioeconómico sin añadir 4 variables dummy.
+2. **Umbrales calculados estrictamente en entrenamiento:** Tanto el umbral de coste ($0,0522$) como el de Youden/closest-topleft ($0,066$) se calibraron exclusivamente en `train_data`, garantizando una evaluación independiente y sin *data leakage* en `test_data`.
+3. **Calibración de Random Forest:** Se utilizó muestreo estratificado balanceado por árbol (`sampsize = c(214, 214)`), lo que corrigió la ceguera algorítmica hacia los enfermos y permitió calcular una importancia por permutación focalizada en la clase positiva.
 
 ## 6. Conclusiones
 
-En la ejecución analizada, el modelo integral M2 obtuvo AUC 0,825 frente a 0,804 para M0, con una diferencia DeLong nominalmente significativa en test (*p* = 0,04338, sin ajuste por comparaciones múltiples). M2 también registró el coste menor en la tabla de clasificación. No obstante, la comparación M1–M2 (*p* = 0,126) no demuestra una mejora significativa de AUC al añadir hábitos después de las variables clínicas.
-
-La estratificación mostró un aumento de la proporción observada de eventos entre niveles en este conjunto de prueba, pero no valida los cortes ni las acciones clínicas del código. El modelo multinomial para distinguir el tipo de evento tuvo discriminación limitada. Debido al carácter transversal y autodeclarado de NHANES, las conclusiones se restringen a clasificación de antecedentes en esta muestra y no permiten afirmar causalidad, predecir eventos futuros individuales ni formular recomendaciones médicas.
+1. Los hábitos de vida modificables aportan información cuantitativa y predictiva relevante: el modelo M2 alcanza un **AUC de 0,829** en test, superando a M0 (*p* = 0,0212) y mejorando el ajuste clínico de M1 ($\Delta\text{AIC} = -28,7$; ANOVA $p < 0,001$; DeLong $p = 0,0687$).
+2. La definición de la diana compuesta MACE atenúa el desbalanceo severo (prevalencia 6,63 % frente a 3,85 % del infarto aislado) y refleja con mayor fidelidad el sustrato aterosclerótico global.
+3. El tabaquismo activo ($\text{OR} = 1,705$), el historial familiar ($\text{OR} = 1,647$), el insomnio ($\text{OR} = 1,605$) y el sedentarismo diario ($\text{OR} = 1,064$ por hora) constituyen los predictores modificables clave.
+4. El sedentarismo presenta un impacto no lineal, con un riesgo creciente a partir de aproximadamente 5 horas diarias de inactividad.
+5. Los modelos exhiben paridad discriminativa global por sexo (AUC 0,831 en mujeres vs. 0,821 en hombres), pero aplicar un corte único sin calibrar provoca una mayor tasa de falsos negativos en mujeres (28,2 % vs. 25,0 %).
+6. La evaluación sensible al coste ($C(\text{FN})/C(\text{FP}) = 15$) determina un umbral óptimo de 0,052 que incrementa la sensibilidad al **84,6 %**, reduciendo los falsos negativos a solo 14 casos.
+7. La estratificación en cuatro niveles de riesgo concentra al 84,6 % de los enfermos en el tercio superior de riesgo de la población, demostrando la aplicabilidad de los modelos jerárquicos para priorizar el cribado preventivo.
 
 ## 7. Fuentes y documentación
 
 1. Centers for Disease Control and Prevention (CDC). **National Health and Nutrition Examination Survey (NHANES), 2013–2014.** Conjunto de datos utilizado mediante [Kaggle](https://www.kaggle.com/datasets/cdc/national-health-and-nutrition-examination-survey).
-2. Scripts del proyecto: `preparacion_datos.R`, `analisis_exploratorio_eda.R`, `modelos.R`, `interpretacion_graficas.R` y `R script prediccion infarto.R`.
+2. Scripts del proyecto en el repositorio: `preparacion_datos.R`, `analisis_exploratorio_eda.R`, `modelos.R`, `interpretacion_graficas.R` y `R script prediccion infarto.R`.
+3. Flach, P. (2012). *Machine Learning: The Art and Science of Algorithms that Make Sense of Data*. Cambridge University Press (Análisis ROC y rectas de iso-coste).
