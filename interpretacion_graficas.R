@@ -470,9 +470,9 @@ cat("--- EVALUACIÓN SENSIBLE AL COSTE E ISO-COSTE ---\n")
 cat("=======================================================\n")
 
 # Parámetros clínicos de la Matriz de Costes:
-# Un Falso Negativo (enfermo no detectado) se penaliza 10 veces más que un Falso Positivo (falsa alarma)
+# Un Falso Negativo (enfermo no detectado) se penaliza 15 veces más que un Falso Positivo (falsa alarma)
 coste_fp <- 1
-coste_fn <- 10
+coste_fn <- 15
 
 # 1. Calibración del umbral óptimo ESTRICTAMENTE en TRAIN
 prev_train <- mean(train_data$mace_target == 1)
@@ -495,7 +495,7 @@ coste_esperado_test <- (1 - prev_test) * coste_fp * (1 - coords_test_coste$speci
 
 x_opt <- 1 - coords_test_coste$specificity
 y_opt <- coords_test_coste$sensitivity
-b_iso <- y_opt - m_iso * x_opt
+b_iso <- max((roc_m2_mace$sensitivities) - m_iso * (1 - roc_m2_mace$specificities))
 
 cat("Prevalencia MACE en Train:       ", round(prev_train * 100, 2), "%\n")
 cat("Prevalencia MACE en Test:        ", round(prev_test * 100, 2), "%\n")
@@ -519,7 +519,7 @@ p_isocost <- ggplot(df_roc_m2_curve, aes(x = fpr, y = tpr)) +
   geom_abline(intercept = b_iso, slope = m_iso, color = "#d35400", linetype = "longdash", linewidth = 1.1) +
   annotate("point", x = x_opt, y = y_opt, color = "#d35400", size = 4.2) +
   annotate("text",
-    x = x_opt + 0.04, y = y_opt - 0.06,
+    x = x_opt + 0.04, y = y_opt - 0.08,
     label = paste0(
       "Punto de Evaluación en Test\nUmbral (Train) = ", round(th_opt_coste, 3),
       "\nSens Test = ", round(y_opt * 100, 1), "%\nEspec Test = ", round(coords_test_coste$specificity * 100, 1), "%"
@@ -527,8 +527,8 @@ p_isocost <- ggplot(df_roc_m2_curve, aes(x = fpr, y = tpr)) +
     hjust = 0, fontface = "bold", size = 3.6, color = "#962d00"
   ) +
   annotate("text",
-    x = 0.55, y = 0.82,
-    label = paste0("Recta de Iso-Coste (m = ", round(m_iso, 2), ")\nMatriz de Costes: C(FN)/C(FP) = 10"),
+    x = 0.02, y = 0.93,
+    label = paste0("Recta de Iso-Coste (m = ", round(m_iso, 2), ")\nMatriz de Costes: C(FN)/C(FP) = 15"),
     hjust = 0, fontface = "italic", size = 3.4, color = "#d35400"
   ) +
   scale_x_continuous(
@@ -552,7 +552,7 @@ p_isocost <- ggplot(df_roc_m2_curve, aes(x = fpr, y = tpr)) +
   ) +
   labs(
     title = "Evaluación Sensible al Coste y Recta de Iso-Coste (M2)",
-    subtitle = "Optimización de umbral asistencial penalizando el Falso Negativo (C(FN) = 10 x C(FP))"
+    subtitle = "Optimización de umbral asistencial penalizando el Falso Negativo (C(FN) = 15 x C(FP))"
   )
 
 ggsave("curva_roc_isocoste_optimo.png", plot = p_isocost, width = 7.5, height = 6.5, dpi = 150)

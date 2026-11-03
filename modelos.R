@@ -165,7 +165,7 @@ calcular_metricas_test <- function(y_real, prob, umbral, nombre_modelo, aic_val 
     F1_Score      = sprintf("%.3f", f1),
     Falsos_Neg    = fn,
     Falsos_Pos    = fp,
-    Coste_10a1    = 10 * fn + fp,  # Coste total con la matriz C(FN) = 10 x C(FP)
+    Coste_15a1    = 15 * fn + fp,  # Coste total con la matriz C(FN) = 15 x C(FP)
     stringsAsFactors = FALSE
   )
 }
@@ -319,7 +319,7 @@ save(
   auc_m0_mace, auc_m1_mace, auc_m2_mace, auc_rf_mace, auc_ami,
   tabla_metricas_test,
   th_m0, th_m1, th_m2, th_rf,
-  train_data, test_data,
+  train_data, test_data, train_rf,
   m_tipo, estratificacion_test, tabla_niveles_riesgo,
   cortes_riesgo, niveles_riesgo, acciones_nivel,
   auc_tipo_multiclase, auc_tipo_ovr, auc_prob_infarto,
