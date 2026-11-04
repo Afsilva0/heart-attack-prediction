@@ -10,6 +10,8 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 
+dir.create("imagenes", showWarnings = FALSE, recursive = TRUE)
+
 cat("\n=======================================================\n")
 cat("--- ANÁLISIS EXPLORATORIO DE DATOS ---\n")
 cat("=======================================================\n")
@@ -91,8 +93,8 @@ p_eda1 <- ggplot(df_eda_na, aes(x = Pct_NA, y = Variable, fill = Poblacion)) +
     x = "Porcentaje de Registros Ausentes o No Aplicables (%)"
   )
 
-ggsave("eda_datos_ausentes_filtro_edad.png", plot = p_eda1, width = 9.5, height = 5.8, dpi = 150)
-cat("Gráfico de saneamiento exportado a 'eda_datos_ausentes_filtro_edad.png'.\n")
+ggsave(file.path("imagenes", "eda_datos_ausentes_filtro_edad.png"), plot = p_eda1, width = 9.5, height = 5.8, dpi = 150)
+cat("Gráfico de saneamiento exportado a 'imagenes/eda_datos_ausentes_filtro_edad.png'.\n")
 
 
 # ------------------------------------------------------------------------------
@@ -155,8 +157,8 @@ p_eda2 <- ggplot(cor_df, aes(x = Var1, y = Var2, fill = Corr)) +
     subtitle = "Inspección de multicolinealidad clínica (IMC vs Cintura) y linealidad con hábitos de vida"
   )
 
-ggsave("eda_correlaciones_clinicas.png", plot = p_eda2, width = 8.2, height = 6.4, dpi = 150)
-cat("Gráfico de correlación exportado a 'eda_correlaciones_clinicas.png'.\n")
+ggsave(file.path("imagenes", "eda_correlaciones_clinicas.png"), plot = p_eda2, width = 8.2, height = 6.4, dpi = 150)
+cat("Gráfico de correlación exportado a 'imagenes/eda_correlaciones_clinicas.png'.\n")
 
 
 # ------------------------------------------------------------------------------
@@ -250,7 +252,7 @@ p_eda3 <- ggplot() +
     subtitle = "Cohorte analítica final (N = 4.597): Distribución poblacional y tasa de eventos cardiovasculares"
   )
 
-ggsave("eda_piramide_edad_mace.png", plot = p_eda3, width = 9.5, height = 6.0, dpi = 150)
-cat("Gráfico de pirámide demográfica exportado a 'eda_piramide_edad_mace.png'.\n")
+ggsave(file.path("imagenes", "eda_piramide_edad_mace.png"), plot = p_eda3, width = 9.5, height = 6.0, dpi = 150)
+cat("Gráfico de pirámide demográfica exportado a 'imagenes/eda_piramide_edad_mace.png'.\n")
 
 cat("\n--- analisis_exploratorio_eda.R finalizado correctamente ---\n")

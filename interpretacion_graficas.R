@@ -10,6 +10,8 @@ library(pROC)
 library(dplyr)
 library(randomForest)
 
+dir.create("imagenes", showWarnings = FALSE, recursive = TRUE)
+
 # ==============================================================================
 # CONTRASTES ESTADÍSTICOS FORMALES (Diana MACE)
 # ==============================================================================
@@ -109,8 +111,8 @@ p_roc_oficial <- ggplot(df_roc_all, aes(x = fpr, y = tpr, color = modelo)) +
   )
 
 # Exportar la gráfica ROC oficial y definitiva
-ggsave("curvas_roc_modelos.png", plot = p_roc_oficial, width = 7.5, height = 6.5, dpi = 150)
-cat("Gráfico ROC oficial exportado correctamente a 'curvas_roc_modelos.png'.\n")
+ggsave(file.path("imagenes", "curvas_roc_modelos.png"), plot = p_roc_oficial, width = 7.5, height = 6.5, dpi = 150)
+cat("Gráfico ROC oficial exportado correctamente a 'imagenes/curvas_roc_modelos.png'.\n")
 
 # ==============================================================================
 # EJE 2: COMPARATIVA INFARTO AISLADO vs MACE (ami_target vs mace_target)
@@ -173,8 +175,8 @@ p_dianas <- ggplot(df_comparativa_dianas, aes(x = fpr, y = tpr, color = diana)) 
     subtitle = "Evento Agudo Aislado (ami_target) frente a Evento Compuesto Isquémico (MACE)"
   )
 
-ggsave("curva_roc_mace_vs_infarto.png", plot = p_dianas, width = 7.5, height = 6.5, dpi = 150)
-cat("Gráfico comparativo exportado correctamente a 'curva_roc_mace_vs_infarto.png'.\n")
+ggsave(file.path("imagenes", "curva_roc_mace_vs_infarto.png"), plot = p_dianas, width = 7.5, height = 6.5, dpi = 150)
+cat("Gráfico comparativo exportado correctamente a 'imagenes/curva_roc_mace_vs_infarto.png'.\n")
 
 # ==============================================================================
 # FOREST PLOT - ODDS RATIOS (Diana MACE)
@@ -256,8 +258,8 @@ p_forest <- ggplot(df_forest, aes(x = OR, y = Nombre, color = Significativo)) +
     subtitle = "Odds Ratios ajustados por edad, clínica y entorno socioeconómico (NHANES)"
   )
 
-ggsave("forest_plot_riesgo_mace.png", plot = p_forest, width = 9.0, height = 7.0, dpi = 150)
-cat("Forest Plot exportado correctamente a 'forest_plot_riesgo_mace.png'.\n")
+ggsave(file.path("imagenes", "forest_plot_riesgo_mace.png"), plot = p_forest, width = 9.0, height = 7.0, dpi = 150)
+cat("Forest Plot exportado correctamente a 'imagenes/forest_plot_riesgo_mace.png'.\n")
 
 # ==============================================================================
 # RANDOM FOREST - IMPORTANCIA DE VARIABLES Y CURVA DEPENDENCIA PARCIAL
@@ -314,8 +316,8 @@ p_imp <- ggplot(df_imp, aes(x = Importance_Yes, y = Nombre)) +
     x = "Importancia (Disminución de Precisión al Permutar en Clase 'Yes')"
   )
 
-ggsave("importancia_variables_rf.png", plot = p_imp, width = 8.5, height = 6.0, dpi = 150)
-cat("Gráfico de Importancia exportado a 'importancia_variables_rf.png'.\n")
+ggsave(file.path("imagenes", "importancia_variables_rf.png"), plot = p_imp, width = 8.5, height = 6.0, dpi = 150)
+cat("Gráfico de Importancia exportado a 'imagenes/importancia_variables_rf.png'.\n")
 
 # Curva de Dependencia Parcial de Sedentarismo
 cat("\nCalculando curva de dependencia parcial para Sedentarismo...\n")
@@ -353,8 +355,8 @@ p_sed <- ggplot(df_partial, aes(x = horas, y = efecto)) +
     y = "Efecto Marginal Centrado (1/2 Log-Odds)"
   )
 
-ggsave("curva_sedentarismo_partialplot.png", plot = p_sed, width = 8.0, height = 5.5, dpi = 150)
-cat("Gráfico de Sedentarismo exportado a 'curva_sedentarismo_partialplot.png'.\n")
+ggsave(file.path("imagenes", "curva_sedentarismo_partialplot.png"), plot = p_sed, width = 8.0, height = 5.5, dpi = 150)
+cat("Gráfico de Sedentarismo exportado a 'imagenes/curva_sedentarismo_partialplot.png'.\n")
 
 # ==============================================================================
 # AUDITORÍA DE EQUIDAD (FAIRNESS) Y SESGO DE GÉNERO
@@ -462,8 +464,8 @@ p_fairness <- ggplot(df_roc_sexo, aes(x = fpr, y = tpr, color = sexo)) +
     subtitle = "Capacidad de discriminación del Modelo Integral M2 desagregada por sexo en Test"
   )
 
-ggsave("curvas_roc_fairness_genero.png", plot = p_fairness, width = 7.5, height = 6.5, dpi = 150)
-cat("Gráfico de Equidad por Género exportado a 'curvas_roc_fairness_genero.png'.\n")
+ggsave(file.path("imagenes", "curvas_roc_fairness_genero.png"), plot = p_fairness, width = 7.5, height = 6.5, dpi = 150)
+cat("Gráfico de Equidad por Género exportado a 'imagenes/curvas_roc_fairness_genero.png'.\n")
 
 cat("\n=======================================================\n")
 cat("--- EVALUACIÓN SENSIBLE AL COSTE E ISO-COSTE ---\n")
@@ -555,8 +557,8 @@ p_isocost <- ggplot(df_roc_m2_curve, aes(x = fpr, y = tpr)) +
     subtitle = "Optimización de umbral asistencial penalizando el Falso Negativo (C(FN) = 15 x C(FP))"
   )
 
-ggsave("curva_roc_isocoste_optimo.png", plot = p_isocost, width = 7.5, height = 6.5, dpi = 150)
-cat("Gráfico de Recta de Iso-Coste exportado a 'curva_roc_isocoste_optimo.png'.\n")
+ggsave(file.path("imagenes", "curva_roc_isocoste_optimo.png"), plot = p_isocost, width = 7.5, height = 6.5, dpi = 150)
+cat("Gráfico de Recta de Iso-Coste exportado a 'imagenes/curva_roc_isocoste_optimo.png'.\n")
 
 # ==============================================================================
 # ESTRATIFICACIÓN DEL RIESGO Y TIPO DE EVENTO (Gráfica y fichas de paciente)
@@ -629,8 +631,8 @@ p_estrat <- ggplot() +
     subtitle = "Riesgo observado en el conjunto Test por nivel asignado, desglosado por patología"
   )
 
-ggsave("estratificacion_riesgo_tipo_evento.png", plot = p_estrat, width = 8.5, height = 6.5, dpi = 150)
-cat("Gráfico de estratificación exportado a 'estratificacion_riesgo_tipo_evento.png'.\n")
+ggsave(file.path("imagenes", "estratificacion_riesgo_tipo_evento.png"), plot = p_estrat, width = 8.5, height = 6.5, dpi = 150)
+cat("Gráfico de estratificación exportado a 'imagenes/estratificacion_riesgo_tipo_evento.png'.\n")
 
 # Fichas de ejemplo: el paciente "típico" (mediana de riesgo) de cada nivel
 ficha_paciente <- function(fila) {

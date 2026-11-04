@@ -136,13 +136,13 @@ La prevalencia del evento compuesto MACE (6,63 %) prácticamente duplica a la de
 
 En el gráfico de datos ausentes, los cuestionarios cardiovasculares presentan alrededor del 43 % de valores ausentes o códigos 7/9 en la cohorte bruta y caen a entre 0,0 % y 0,3 % en la cohorte adulta. El patrón demuestra formalmente la existencia de *skip patterns* protocolarios del CDC para menores de 20 años, justificando el filtrado poblacional.
 
-![Porcentaje de valores ausentes antes y después del filtro de edad](heart-attack-prediction/eda_datos_ausentes_filtro_edad.png)
+![Porcentaje de valores ausentes antes y después del filtro de edad](./imagenes/eda_datos_ausentes_filtro_edad.png)
 
 **Figura 1.** Porcentajes de valores ausentes antes y después del filtro de edad ($\ge$ 20 años).
 
 La matriz de correlación evidencia una colinealidad masiva entre IMC y perímetro de cintura (**r = 0,91**), moderada entre edad y presión sistólica (**r = 0,44**) y entre presiones sistólica y diastólica (**r = 0,34**). Por el contrario, las horas de sedentarismo presentan correlaciones lineales prácticamente nulas con las variables biométricas ($|r| \le 0,09$), sugiriendo la necesidad de explorar relaciones no lineales.
 
-![Matriz de correlación entre variables cuantitativas](heart-attack-prediction/eda_correlaciones_clinicas.png)
+![Matriz de correlación entre variables cuantitativas](./imagenes/eda_correlaciones_clinicas.png)
 
 **Figura 2.** Matriz de correlación lineal de Pearson entre variables cuantitativas.
 
@@ -157,7 +157,7 @@ La pirámide demográfica muestra un marcado gradiente etario y una clara brecha
 | 60–69         |           15,9 % |            9,0 % |
 | $\ge$ 70      |           25,4 % |           15,7 % |
 
-![Distribución de participantes y frecuencia de MACE por edad y sexo](heart-attack-prediction/eda_piramide_edad_mace.png)
+![Distribución de participantes y frecuencia de MACE por edad y sexo](./imagenes/eda_piramide_edad_mace.png)
 
 **Figura 3.** Pirámide poblacional y prevalencia de MACE observada por grupo etario y sexo.
 
@@ -174,7 +174,7 @@ Los umbrales de decisión se fijaron en entrenamiento mediante `closest.topleft`
 
 El modelo integral M2 presenta el mayor AUC (0,829), el menor AIC (1256,8), la mayor sensibilidad (73,6 %, capturando 67 de los 91 enfermos) y el menor coste total asistencial ponderado (692 penalizando 15:1). Random Forest alcanza un AUC equivalente a M1 (0,815).
 
-![Curvas ROC de M0, M1 y M2 en el conjunto de prueba](heart-attack-prediction/curvas_roc_modelos.png)
+![Curvas ROC de M0, M1 y M2 en el conjunto de prueba](./imagenes/curvas_roc_modelos.png)
 
 **Figura 4.** Comparativa de curvas ROC en test para los modelos jerárquicos M0 (0,804), M1 (0,815) y M2 (0,829).
 
@@ -192,7 +192,7 @@ La ganancia global de discriminación entre M0 y M2 es **estadísticamente signi
 
 Para el objetivo de infarto agudo aislado, `m2_ami` obtuvo un AUC de 0,817 frente al 0,829 del modelo M2 para MACE.
 
-![Comparación ROC de infarto aislado y evento compuesto](heart-attack-prediction/curva_roc_mace_vs_infarto.png)
+![Comparación ROC de infarto aislado y evento compuesto](./imagenes/curva_roc_mace_vs_infarto.png)
 
 **Figura 5.** Curvas ROC comparativas para infarto aislado (`ami_target`, AUC = 0,817) frente a diana compuesta (`mace_target`, AUC = 0,829).
 
@@ -220,19 +220,19 @@ Odds Ratios ajustados e intervalos de confianza al 95 % obtenidos del modelo M2:
 
 La distinción en 3 niveles de tabaquismo demostró que el tabaquismo activo casi duplica el riesgo ($\text{OR} = 1,705$), mientras que los exfumadores presentan un OR neutro/atenuado ($\text{OR} = 0,788$), explicando por qué en los análisis planos de Kaggle el tabaco parecía no influir. La aparente protección de la tensión sistólica y el pulso refleja causalidad inversa por tratamiento farmacológico intensivo en pacientes crónicos (antihipertensivos y betabloqueantes).
 
-![Forest Plot de Odds Ratios del modelo logístico M2](heart-attack-prediction/forest_plot_riesgo_mace.png)
+![Forest Plot de Odds Ratios del modelo logístico M2](./imagenes/forest_plot_riesgo_mace.png)
 
 **Figura 6.** Odds Ratios e intervalos de confianza del 95 % para los predictores del modelo M2.
 
 En el ranking de importancia por permutación de Random Forest (clase positiva MACE), la edad lidera ampliamente (43,2), seguida del perímetro de cintura (10,2), sexo (7,6), ratio ingresos/pobreza (6,6), tensión diastólica (6,5) y etnia/raza (6,2). La importancia por permutación focalizada en la clase positiva evita el sesgo de Gini hacia variables continuas y rescata el peso de factores clínicos y demográficos.
 
-![Importancia por permutación en Random Forest](heart-attack-prediction/importancia_variables_rf.png)
+![Importancia por permutación en Random Forest](./imagenes/importancia_variables_rf.png)
 
 **Figura 7.** Importancia por permutación en Random Forest para la detección de la clase MACE positivo.
 
 La curva de dependencia parcial (*partial plot*) de Random Forest para el sedentarismo confirma una relación no lineal: tras una meseta en valores bajos, el riesgo relativo se incrementa de forma continuada a partir de aproximadamente 5 horas diarias de sedentarismo.
 
-![Dependencia parcial del sedentarismo en Random Forest](heart-attack-prediction/curva_sedentarismo_partialplot.png)
+![Dependencia parcial del sedentarismo en Random Forest](./imagenes/curva_sedentarismo_partialplot.png)
 
 **Figura 8.** Efecto marginal centrado (1/2 log-odds) del sedentarismo diario estimado por Random Forest.
 
@@ -247,7 +247,7 @@ Evaluación en el conjunto de prueba con el umbral clínico balanceado fijado en
 
 La capacidad discriminativa global es alta y homogénea en ambos sexos (AUC 0,831 en mujeres y 0,821 en hombres). Con un umbral asistencial común, las mujeres presentan una especificidad superior pero una sensibilidad inferior (71,8 % vs. 75,0 %), resultando en una mayor tasa de falsos negativos (28,2 % vs. 25,0 %). Esto refleja la necesidad de calibrar umbrales más sensibles en mujeres para contrarrestar el infradiagnóstico clínico.
 
-![Curvas ROC de M2 separadas por sexo](heart-attack-prediction/curvas_roc_fairness_genero.png)
+![Curvas ROC de M2 separadas por sexo](./imagenes/curvas_roc_fairness_genero.png)
 
 **Figura 9.** Auditoría de equidad algorítmica: curvas ROC de M2 para mujeres (0,831) y hombres (0,821).
 
@@ -255,7 +255,7 @@ En la evaluación sensible al coste, dado que en la cohorte existen aproximadame
 
 Al evaluar este umbral en test, la **sensibilidad se incrementa al 84,6 %** (capturando a 77 de los 91 enfermos; solo 14 falsos negativos frente a los 89 del umbral convencional al 0,50), con una especificidad del 68,6 %. La recta de iso-coste resulta tangente exterior a la envolvente convexa de la curva ROC.
 
-![Curva ROC y recta de iso-coste para M2](heart-attack-prediction/curva_roc_isocoste_optimo.png)
+![Curva ROC y recta de iso-coste para M2](./imagenes/curva_roc_isocoste_optimo.png)
 
 **Figura 10.** Optimización de umbral asistencial sensible al coste ($C(\text{FN})/C(\text{FP}) = 15$) y recta de iso-coste tangente.
 
@@ -272,7 +272,7 @@ Estratificación en el conjunto de prueba dividiendo las probabilidades predicha
 
 La tasa observada de eventos cardiovasculares crece de forma monótona y consistente a través de los estratos (de 1,6 % en nivel bajo a 28,6 % en muy alto). Concentrando la atención médica en los grupos de riesgo moderado, alto y muy alto (el 35,8 % de la población), el sistema cubre al **84,6 % de todos los pacientes que desarrollaron eventos cardiovasculares**.
 
-![Riesgo observado y tipos de evento por nivel asignado](heart-attack-prediction/estratificacion_riesgo_tipo_evento.png)
+![Riesgo observado y tipos de evento por nivel asignado](./imagenes/estratificacion_riesgo_tipo_evento.png)
 
 **Figura 11.** Estratificación de riesgo en test y distribución de patologías reales observadas.
 
